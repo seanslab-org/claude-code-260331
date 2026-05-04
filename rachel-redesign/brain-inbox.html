@@ -2,18 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Brain Inbox — v9 / Rachel</title>
+<title>Morning chart review — v2 / Rachel</title>
 <style>
   :root {
     --bg:           #F7F5EF;
-    --bg-inbox:     #F4F1E8;        /* one notch warmer for the Inbox sheaf */
+    --bg-inbox:     #F4F1E8;
     --panel:        #FFFFFF;
     --panel-soft:   #FBFAF6;
-    --vellum:       #F0EBDC;        /* the lock-stripe paper */
+    --vellum:       #F0EBDC;
     --ink:          #1F1F1E;
     --ink-soft:     #5A5854;
     --ink-faint:    #94918B;
-    --ink-bg:       #B5B2AB;        /* age_band: background */
     --rule:         #E8E4D8;
     --rule-soft:    #F0ECE0;
 
@@ -21,19 +20,9 @@
     --brand-strong: #0097a7;
     --brand-soft:   #E0F2F4;
 
-    --c-1:  #5B9292;
-    --c-2:  #C97A6E;
-    --c-3:  #C99363;
-    --c-10: #6E7E8E;
-    --c-11: #B47BA0;
-
-    --strike:       #C97A6E;        /* removed text */
-    --add:          #5B9292;        /* added text */
-
     --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
     --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --shadow-frame: 0 24px 60px -28px rgba(0,0,0,0.18), 0 2px 8px -3px rgba(0,0,0,0.05);
     --shadow-card:  0 8px 18px -10px rgba(0,0,0,0.10);
   }
   *, *::before, *::after { box-sizing: border-box; }
@@ -46,13 +35,12 @@
     line-height: 1.55;
     padding: 36px 32px 96px;
   }
-  .page { max-width: 880px; margin: 0 auto; }
+  .page { max-width: 720px; margin: 0 auto; }
 
-  /* ========== Masthead ========== */
+  /* ========== Masthead — quiet, three lines ========== */
   .masthead {
     padding-bottom: 22px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--rule);
+    margin-bottom: 28px;
   }
   .crumb {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em;
@@ -60,337 +48,177 @@
   }
   h1.title {
     font-family: var(--font-serif);
-    font-size: 30px; font-weight: 500;
+    font-size: 28px; font-weight: 500;
     letter-spacing: -0.012em;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
   }
   .opening {
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: 16.5px;
+    font-size: 16px;
     color: var(--ink-soft);
     margin: 0;
-    letter-spacing: -0.005em;
-    max-width: 600px;
+    max-width: 560px;
   }
   .opening .when {
     font-style: normal;
     font-family: var(--font-stack);
-    font-size: 12px;
+    font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 0.10em;
     color: var(--ink-faint);
-    margin-left: 10px;
+    margin-left: 8px;
     vertical-align: 2px;
   }
-  .summary {
-    margin-top: 8px;
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: 14.5px;
-    color: var(--ink-faint);
-  }
 
-  /* ========== Inbox sheaf — slightly warmer paper, no border, just shadow ========== */
+  /* ========== The sheaf — warmer paper, no toolbar ========== */
   .sheaf {
     background: var(--bg-inbox);
     border-radius: 14px;
-    padding: 18px 22px 20px;
+    padding: 22px 26px 26px;
     box-shadow: 0 1px 0 var(--rule-soft) inset, 0 18px 40px -28px rgba(0,0,0,0.10);
   }
-  .sheaf-head {
-    display: flex; align-items: baseline; gap: 14px;
-    padding: 0 0 14px;
+
+  /* ========== A confirmation prompt — Geomi speaks; user replies ========== */
+  .prompt {
+    padding: 22px 4px 4px;
     border-bottom: 1px solid var(--rule-soft);
   }
-  .sheaf-head .title-tiny {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
-    color: var(--brand-strong); text-transform: uppercase;
-  }
-  .sheaf-head .nightly {
-    font-size: 11.5px;
-    color: var(--ink-faint);
-    margin-left: auto;
-  }
-  .sheaf-head .nightly code {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    color: var(--ink-soft);
-    background: rgba(0,0,0,0.03);
-    padding: 1px 5px; border-radius: 3px;
-  }
+  .prompt:first-child { padding-top: 6px; }
+  .prompt:last-child { border-bottom: none; }
 
-  /* ========== Proposal card — shares 80% of dossier-card CSS ========== */
-  .proposal {
-    margin-top: 16px;
-    padding: 18px 18px 14px;
-    background: var(--panel);
-    border: 1px solid var(--rule-soft);
-    border-radius: 12px;
-    box-shadow: var(--shadow-card);
-    position: relative;
-  }
-  .proposal + .proposal { margin-top: 14px; }
-
-  /* the path tag — small, mono, top-left; clickable to open the card */
-  .path {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--font-mono);
+  /* the small "Geomi" line above each prompt — breathing dot + the entity at hand */
+  .prompt-head {
+    display: flex; align-items: center; gap: 8px;
     font-size: 11px;
-    color: var(--ink-soft);
-    background: rgba(0,0,0,0.025);
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    text-decoration: none;
-  }
-  .path:hover { color: var(--brand-strong); background: var(--brand-soft); }
-  .path .field {
-    color: var(--brand-strong);
-    font-weight: 600;
-  }
-
-  /* ========== Diff block — sentence-level, no [n] markers ========== */
-  .diff {
-    font-family: var(--font-serif);
-    font-size: 14.5px;
-    line-height: 1.62;
-    color: var(--ink);
-    letter-spacing: -0.002em;
-  }
-  .diff .row { padding: 1px 0; }
-  .diff .row .gutter {
-    display: inline-block;
-    width: 20px;
     color: var(--ink-faint);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    user-select: none;
-    vertical-align: 1px;
-  }
-  .diff .row.was .gutter   { color: var(--strike); }
-  .diff .row.now .gutter   { color: var(--add); }
-  .diff .row.was .text {
-    color: var(--ink-faint);
-    text-decoration: line-through;
-    text-decoration-color: rgba(201,122,110,0.55);
-    text-decoration-thickness: 1px;
-  }
-  .diff .row.now .text { color: var(--ink); }
-  .diff .row.now .text mark {
-    background: rgba(91,146,146,0.14);
-    color: var(--ink);
-    padding: 0 2px;
-    border-radius: 2px;
-  }
-  .diff .ent {
-    color: var(--brand-strong);
-    font-family: var(--font-stack);
-    font-style: normal;
-    font-weight: 500;
-  }
-
-  /* ========== "Why" — the citation lives below the diff, fragment-style ========== */
-  .why {
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px dotted var(--rule);
-    font-size: 11.5px;
-    color: var(--ink-faint);
-    line-height: 1.5;
-  }
-  .why .label {
     text-transform: uppercase;
     letter-spacing: 0.10em;
-    font-weight: 700;
-    color: var(--ink-faint);
-    margin-right: 6px;
-    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 10px;
   }
-  .why a {
+  .prompt-head .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--brand);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(27,191,203,0.16);
+  }
+  .prompt-head .who {
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .prompt-head .about {
+    margin-left: auto;
+    color: var(--ink-faint);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    text-transform: none;
+    font-family: var(--font-serif);
+    font-style: italic;
+  }
+
+  /* the actual sentence Geomi says — full prose, serif, generous */
+  .prompt-body {
+    font-family: var(--font-serif);
+    font-size: 16.5px;
+    line-height: 1.62;
+    color: var(--ink);
+    letter-spacing: -0.003em;
+    margin: 0 0 6px;
+  }
+  .prompt-body em { font-style: italic; color: var(--ink); }
+  .prompt-body .ent {
+    color: var(--brand-strong);
+    font-family: var(--font-stack);
+    font-style: normal;
+    font-weight: 500;
+  }
+  .prompt-body .quote {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* the source whisper — one line, no labels, just the meeting */
+  .heard {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 6px 0 0;
+    padding-left: 0;
+  }
+  .heard a {
     color: var(--ink-soft);
     text-decoration: none;
     border-bottom: 1px dotted var(--rule);
   }
-  .why a:hover { color: var(--brand-strong); border-bottom-color: var(--brand-soft); }
-  .why .model {
-    margin-left: 8px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-faint);
-  }
+  .heard a:hover { color: var(--brand-strong); border-bottom-color: var(--brand-soft); }
 
-  /* ========== Actions row ========== */
-  .actions {
-    display: flex; align-items: center; gap: 10px;
+  /* the reply row — three plain words, no chrome ========================== */
+  .reply {
+    display: flex; align-items: center; gap: 22px;
     margin-top: 14px;
+    padding-bottom: 6px;
   }
-  .btn {
+  .reply button {
     appearance: none; -webkit-appearance: none;
-    border: 1px solid var(--rule);
-    background: var(--panel-soft);
-    color: var(--ink-soft);
+    background: transparent;
+    border: none;
+    padding: 4px 0;
     font-family: var(--font-stack);
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 500;
-    padding: 6px 12px;
-    border-radius: 6px;
     cursor: pointer;
     letter-spacing: 0.005em;
-    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+    color: var(--ink-soft);
+    transition: color 140ms ease;
   }
-  .btn:hover { background: var(--panel); color: var(--ink); border-color: var(--ink-faint); }
-  .btn.primary {
-    background: var(--brand-soft);
+  .reply button:hover { color: var(--ink); }
+  .reply button.yes {
     color: var(--brand-strong);
-    border-color: var(--brand-soft);
+    font-weight: 600;
   }
-  .btn.primary:hover {
-    background: var(--brand);
-    color: white;
-    border-color: var(--brand);
-  }
-  .btn.ghost {
-    background: transparent;
-    border-color: transparent;
-    color: var(--ink-faint);
-    padding: 6px 8px;
-  }
-  .btn.ghost:hover { color: var(--ink-soft); }
-  .actions .spacer { flex: 1; }
-  .actions .open-card {
-    font-size: 11.5px;
+  .reply button.yes:hover { color: var(--brand); }
+  .reply button.notyet { color: var(--ink-faint); }
+  .reply .spacer { flex: 1; }
+  .reply .open {
+    font-size: 12px;
     color: var(--ink-faint);
     text-decoration: none;
-    border-bottom: 1px dotted var(--rule);
-    padding-bottom: 1px;
-  }
-  .actions .open-card:hover { color: var(--brand-strong); border-bottom-color: var(--brand-soft); }
-
-  /* ========== Lock-collision proposal — vellum stripe, special framing ========== */
-  .proposal.locked {
-    background:
-      repeating-linear-gradient(
-        135deg,
-        var(--vellum) 0px,
-        var(--vellum) 8px,
-        var(--panel) 8px,
-        var(--panel) 16px
-      );
-  }
-  .proposal.locked .lock-line {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 10px;
-    padding: 6px 10px;
-    background: var(--panel);
-    border: 1px solid var(--rule-soft);
-    border-radius: 6px;
-    font-size: 11.5px;
-    color: var(--ink-soft);
     font-style: italic;
-  }
-  .proposal.locked .lock-line .lock-glyph {
-    flex: 0 0 auto;
-    width: 11px; height: 11px;
-    color: var(--ink-faint);
-  }
-  .proposal.locked .lock-line .who {
-    font-style: normal;
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  /* ========== Theme proposal — different shape: not a diff, a candidate ========== */
-  .proposal.theme {
-    background: var(--panel);
-  }
-  .proposal.theme .theme-name {
     font-family: var(--font-serif);
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-    margin: 4px 0 8px;
   }
-  .proposal.theme .theme-blurb {
-    font-family: var(--font-serif);
-    font-size: 14.5px;
-    line-height: 1.55;
-    color: var(--ink-soft);
-    margin: 0 0 10px;
-    max-width: 620px;
-  }
-  .proposal.theme .theme-blurb .ent { color: var(--brand-strong); font-weight: 500; }
-  .proposal.theme .citations {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    margin-bottom: 12px;
-  }
-  .proposal.theme .citations a {
-    font-size: 11px;
-    color: var(--ink-soft);
-    text-decoration: none;
-    padding: 3px 8px;
-    border: 1px solid var(--rule-soft);
-    border-radius: 999px;
-    background: var(--panel-soft);
-  }
-  .proposal.theme .citations a:hover {
-    color: var(--brand-strong);
-    border-color: var(--brand-soft);
-    background: var(--brand-soft);
-  }
+  .reply .open:hover { color: var(--ink-soft); }
 
-  /* ========== Age-band demotion — quiet, small ========== */
-  .proposal.demotion {
-    background: var(--panel);
-  }
-  .proposal.demotion .demote-line {
-    font-family: var(--font-serif);
-    font-size: 14px;
-    font-style: italic;
-    color: var(--ink-faint);
-    margin: 4px 0 10px;
-  }
-  .proposal.demotion .demote-line .word {
-    font-style: normal;
-    color: var(--ink-soft);
-    font-weight: 600;
-    font-family: var(--font-stack);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    background: var(--panel-soft);
-    border: 1px solid var(--rule);
-    padding: 1px 7px;
-    border-radius: 4px;
-    margin: 0 4px;
-    vertical-align: 1px;
-  }
-
-  /* ========== End-of-queue — one line, no chrome ========== */
+  /* ========== End of queue — single line ========== */
   .end-line {
-    margin: 32px auto 0;
-    padding: 20px 0 6px;
+    margin: 36px auto 0;
     text-align: center;
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: 14.5px;
+    font-size: 15px;
     color: var(--ink-faint);
     letter-spacing: -0.002em;
   }
-  .end-line .got {
-    font-style: normal;
-    font-weight: 500;
-    color: var(--ink-soft);
-    font-family: var(--font-stack);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+
+  /* ========== Footnote (kept tiny) ========== */
+  .footnote {
+    margin-top: 28px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-serif);
+    font-style: italic;
+    line-height: 1.55;
+    text-align: center;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  /* ========== Footer ========== */
   .footer {
-    margin-top: 64px;
+    margin-top: 56px;
     padding-top: 14px;
     border-top: 1px solid var(--rule-soft);
     font-family: var(--font-mono);
@@ -404,184 +232,111 @@
 <div class="page">
 
   <header class="masthead">
-    <div class="crumb">Brain Memory · v9 · Rachel</div>
-    <h1 class="title">Brain Inbox</h1>
+    <div class="crumb">Brain Memory · v2 · Rachel</div>
+    <h1 class="title">Good morning. A few things to confirm.</h1>
     <p class="opening">
-      The brain learned things while you slept.
+      The brain heard four things yesterday it would like you to remember.
       <span class="when">last pass · 03:14</span>
     </p>
-    <p class="summary">Three rewrites, one new theme, and a quiet demotion.</p>
   </header>
 
-  <div class="sheaf" role="region" aria-label="Proposed updates">
+  <div class="sheaf" role="region" aria-label="Confirmations from Geomi">
 
-    <div class="sheaf-head">
-      <span class="title-tiny">Proposed since 22 Apr</span>
-      <span class="nightly">consolidated by <code>auto-consolidator</code> on <code>spark1</code></span>
-    </div>
-
-    <!-- 1. Standard rewrite of role_line on a person card -->
-    <article class="proposal">
-      <a class="path" href="#"><span>person/alex-chen.md</span> · <span class="field">role_line</span></a>
-      <div class="diff">
-        <div class="row was">
-          <span class="gutter">−</span><span class="text">VP Eng at Acme · pushes timeline back, holds line on quality</span>
-        </div>
-        <div class="row now">
-          <span class="gutter">+</span><span class="text">VP Eng at Acme · <mark>willing to negotiate timeline if quality holds</mark></span>
-        </div>
+    <!-- 1. Patient update — the canonical doctor moment from the philosophy doc -->
+    <article class="prompt">
+      <div class="prompt-head">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="who">Geomi</span>
+        <span class="about">about Mrs. Chen</span>
       </div>
-      <div class="why">
-        <span class="label">Heard</span>
-        <a href="#">q3-pricing-04may / 12:34–13:02</a>
-        <span>— <em>Alex</em> agreed to a monthly billing experiment with the first ten advisors.</span>
-        <span class="model">qwen-3-32b</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Keep</button>
-        <button class="btn">Set aside</button>
-        <span class="spacer"></span>
-        <a class="open-card" href="#">Open the card</a>
-      </div>
-    </article>
-
-    <!-- 2. Locked-field collision — the brain proposes, the lock holds -->
-    <article class="proposal locked">
-      <a class="path" href="#"><span>person/alex-chen.md</span> · <span class="field">differentiation_bar</span></a>
-
-      <div class="lock-line" aria-label="Field is locked">
-        <svg class="lock-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <span><span class="who">You</span> set this on 12 Apr. Accepting would unlock the field.</span>
-      </div>
-
-      <div class="diff">
-        <div class="row was">
-          <span class="gutter">−</span><span class="text">the Eng counterweight on the leadership team</span>
-        </div>
-        <div class="row now">
-          <span class="gutter">+</span><span class="text"><mark>the one who breaks ties between speed and care on the leadership team</mark></span>
-        </div>
-      </div>
-      <div class="why">
-        <span class="label">Heard</span>
-        <a href="#">leadership-offsite-29apr / 41:08–42:16</a>
-        <span class="model">qwen-3-32b</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Keep &amp; unlock</button>
-        <button class="btn">Set aside</button>
-        <button class="btn ghost">Keep mine</button>
-        <span class="spacer"></span>
-        <a class="open-card" href="#">Open the card</a>
-      </div>
-    </article>
-
-    <!-- 3. New theme proposal — patterns.md candidate -->
-    <article class="proposal theme">
-      <a class="path" href="#"><span>patterns.md</span> · <span class="field">new theme</span></a>
-      <h3 class="theme-name">"Portability over confidentiality"</h3>
-      <p class="theme-blurb">
-        Across four meetings this month, <span class="ent">Alex</span> reframes privacy questions as
-        <em>portability</em> questions — wanting his data to outlive the company rather than wanting
-        it locked away. The pattern is now strong enough to name.
+      <p class="prompt-body">
+        After today's visit, I'd add <em>"reports new dizziness on standing"</em> to <span class="ent">Mrs. Chen</span>'s current concerns.
+        Confirm?
       </p>
-      <div class="citations">
-        <a href="#">04may · q3-pricing</a>
-        <a href="#">29apr · leadership-offsite</a>
-        <a href="#">22apr · vision-walk</a>
-        <a href="#">14mar · 1:1-alex</a>
-      </div>
-      <div class="why">
-        <span class="label">Detected</span>
-        <span>cosine similarity 0.89 across 4 meeting summaries · first surfaced 14 Mar</span>
-        <span class="model">qwen-3-32b</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Add to patterns</button>
-        <button class="btn">Set aside</button>
-        <span class="spacer"></span>
-        <a class="open-card" href="#">Show fragments</a>
-      </div>
-    </article>
-
-    <!-- 4. Standard rewrite — body_blurb on a project card -->
-    <article class="proposal">
-      <a class="path" href="#"><span>project/q3-pricing.md</span> · <span class="field">body_blurb</span></a>
-      <div class="diff">
-        <div class="row was">
-          <span class="gutter">−</span><span class="text">Pricing experiment for Q3. Owners: Alex, Sean. Status: investigating monthly billing for the advisor cohort.</span>
-        </div>
-        <div class="row now">
-          <span class="gutter">+</span><span class="text">Pricing experiment for Q3. Owners: <span class="ent">Alex</span>, <span class="ent">Sean</span>. <mark>Decision (4 May): monthly billing for the first ten advisors, three-month window, success = retention &gt; 80%.</mark></span>
-        </div>
-      </div>
-      <div class="why">
-        <span class="label">Heard</span>
-        <a href="#">q3-pricing-04may / 47:12–49:33</a>
-        <span class="model">qwen-3-32b</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Keep</button>
-        <button class="btn">Set aside</button>
-        <span class="spacer"></span>
-        <a class="open-card" href="#">Open the card</a>
-      </div>
-    </article>
-
-    <!-- 5. Age-band demotion — small, quiet -->
-    <article class="proposal demotion">
-      <a class="path" href="#"><span>person/jordan-park.md</span> · <span class="field">age_band</span></a>
-      <p class="demote-line">
-        No mention of <em>Jordan</em> in the last 96 days. Demote
-        <span class="word">current</span> → <span class="word">background</span> and tuck the role line into
-        the card body?
+      <p class="heard">
+        Heard her say it at <a href="#">9:42 — "I get a little woozy when I stand up too fast lately."</a>
       </p>
-      <div class="why">
-        <span class="label">Last seen</span>
-        <a href="#">28jan · all-hands</a>
-        <span>— Jordan was on PTO in Feb and hasn't appeared since.</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Demote</button>
-        <button class="btn">Keep current</button>
+      <div class="reply">
+        <button class="yes">Yes, remember that</button>
+        <button class="notyet">Not yet</button>
         <span class="spacer"></span>
-        <a class="open-card" href="#">Open the card</a>
+        <a class="open" href="#">Open her folder</a>
       </div>
     </article>
 
-    <!-- 6. New person proposal — full new card -->
-    <article class="proposal">
-      <a class="path" href="#"><span>person/priya-iyer.md</span> · <span class="field">new card</span></a>
-      <div class="diff">
-        <div class="row now">
-          <span class="gutter">+</span><span class="text">
-            <strong>Priya Iyer</strong> · Series A investor at Calm Ventures · <em>asks the second question</em>.
-            Met at the Wave-16 deck review, brought a sharp prompt about retention vs. recall.
-          </span>
-        </div>
+    <!-- 2. Sales account update — alex-chen, what was a tabular role_line is now a sentence -->
+    <article class="prompt">
+      <div class="prompt-head">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="who">Geomi</span>
+        <span class="about">about Alex Chen</span>
       </div>
-      <div class="why">
-        <span class="label">First heard</span>
-        <a href="#">wave-16-deck-02may / 03:18</a>
-        <span>· three speaker turns · email <code>priya@calm.vc</code> matched calendar invite.</span>
-        <span class="model">qwen-3-32b</span>
-      </div>
-      <div class="actions">
-        <button class="btn primary">Make the card</button>
-        <button class="btn">Not yet</button>
+      <p class="prompt-body">
+        I think <span class="ent">Alex</span>'s position has softened — <em>he's now willing to negotiate the timeline if quality holds</em>.
+        Should I update what I know about him?
+      </p>
+      <p class="heard">
+        From yesterday's <a href="#">Q3 pricing call, around 12:34</a>.
+      </p>
+      <div class="reply">
+        <button class="yes">Yes, update</button>
+        <button class="notyet">Not yet</button>
         <span class="spacer"></span>
-        <a class="open-card" href="#">Show fragments</a>
+        <a class="open" href="#">Open his folder</a>
+      </div>
+    </article>
+
+    <!-- 3. New person — the salesperson moment -->
+    <article class="prompt">
+      <div class="prompt-head">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="who">Geomi</span>
+        <span class="about">about a new person</span>
+      </div>
+      <p class="prompt-body">
+        I'd start a folder for <span class="ent">Priya Iyer</span> — Series A investor at Calm Ventures, met at the Wave-16 deck review.
+        She's the one who <em>asked the second question</em>.
+      </p>
+      <p class="heard">
+        First heard her at <a href="#">Wave-16 deck review, 03:18</a>.
+      </p>
+      <div class="reply">
+        <button class="yes">Yes, start her folder</button>
+        <button class="notyet">Not yet</button>
+        <span class="spacer"></span>
+      </div>
+    </article>
+
+    <!-- 4. Lawyer / theme — soft, recurring pattern -->
+    <article class="prompt">
+      <div class="prompt-head">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="who">Geomi</span>
+        <span class="about">a recurring theme</span>
+      </div>
+      <p class="prompt-body">
+        Across four meetings this month, <span class="ent">Alex</span> keeps reframing privacy as <em>portability</em> — wanting his data to outlive the company, rather than wanting it locked away.
+        Worth noting as a recurring theme?
+      </p>
+      <p class="heard">
+        Heard at <a href="#">Q3 pricing</a>, <a href="#">leadership offsite</a>, <a href="#">vision walk</a>, and <a href="#">1:1 on 14 Mar</a>.
+      </p>
+      <div class="reply">
+        <button class="yes">Yes, note the theme</button>
+        <button class="notyet">Not yet</button>
+        <span class="spacer"></span>
       </div>
     </article>
 
   </div>
 
-  <p class="end-line"><span class="got">Got it.</span> &nbsp; &nbsp; The brain is up to date as of 03:14.</p>
+  <p class="end-line">When you're done, the brain is up to date. Sleep well tonight.</p>
 
-  <div class="footer">mockup by Rachel · v9 / brain-inbox · 2026-05-04</div>
+  <p class="footnote">
+    Saying <em>yes</em> is the moment you remember it. The brain holds the chart; you hold the memory.
+  </p>
+
+  <div class="footer">mockup by Rachel · v2 / brain-inbox · 2026-05-04</div>
 
 </div>
 </body>

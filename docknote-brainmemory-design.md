@@ -1,6 +1,12 @@
 # Docknote Brain Memory v8 — design
 
-**Read this first:** `docknote-brain-story.md` — the 30-second architecture in five paragraphs. Everything below assumes the brain-anatomy vocabulary it establishes (engram = file, cortex = markdown layer, hippocampus = index + retrieval, consolidation = nightly pass, working memory = always-loaded).
+**Read this first:** `docknote-brain-story.md` — the architecture as story. Everything below assumes the vocabulary it establishes:
+
+- **engram = file = page.** *Engram* in this doc and code (the brain metaphor distinguishes the index from the trace). *File* when describing the on-disk artifact. *Page* in user-facing copy and Rachel's mockups (the commonplace-book metaphor — the unit the user reads).
+- **cortex** = the bound pages, the markdown layer (`~/Docknote/brain/cortex/`).
+- **hippocampus** = SQLite indexes + RAPTOR + the Brain API (recall reconstructs at query time).
+- **consolidation** = the nightly 03:00 pass; **encoding** = the per-meeting close.
+- **working memory** = `persona.md` + the Recent view, always-loaded.
 
 **Status:** Design draft for SDD review. Architecture decisions locked; SDD-level interface specs and prompts to follow.
 **Date:** 2026-05-04
@@ -108,17 +114,18 @@
 
 **Vocabulary (per `docknote-brain-story.md`):**
 
-| Brain | Docknote |
-|---|---|
-| Neurons (substrate) | bits / bytes |
-| Engram (one memory) | one file in the cortex |
-| Cortex (durable storage) | `~/Docknote/brain/*.md` |
-| Hippocampus (index + recall) | SQLite + sqlite-vec + RAPTOR + Brain API |
-| Working memory (always-loaded buffer) | `persona.md` + Recent view |
-| Encoding | per-meeting-close extraction |
-| Consolidation | nightly 03:00 pass |
-| Recall | the 5-stage read path |
-| Schemas | the Recurring view (auto-detected themes) |
+| Brain (architecture) | Book (user-facing) | Docknote |
+|---|---|---|
+| Neurons (substrate) | — | bits / bytes |
+| Engram (one memory) | a **page** | one file in the cortex |
+| Cortex (durable storage) | the bound pages | `~/Docknote/brain/cortex/*.md` |
+| Hippocampus (index + recall) | the index at the front + the spine | SQLite + sqlite-vec + RAPTOR + Brain API |
+| Working memory (always-loaded buffer) | bookmarked pages | `persona.md` + Recent view |
+| Encoding | a new page added | per-meeting-close extraction |
+| Consolidation | the page turning while you sleep | nightly 03:00 pass |
+| Recall | re-reading | the 5-stage read path |
+| Schemas | recurring themes across pages | the Recurring view (auto-detected themes) |
+| (LLM-proposed update) | **marginalia awaiting your initial** | a row in `proposed_updates`, surfaced via Geomi |
 
 The cortex is the universal interop layer. Plain markdown files on disk; no MCP, no HTTP API, no wire protocol. Power users who poke under the hood get exactly what's there: a markdown directory and a git repo.
 
