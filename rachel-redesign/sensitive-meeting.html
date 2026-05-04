@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sensitive meeting — v9 / Rachel</title>
+<style>
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --vellum:       #F0EBDC;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E8E4D8;
+    --rule-soft:    #F0ECE0;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --c-10: #6E7E8E;
+    --seal:         #8E6F8A;        /* the sensitive seal — muted plum */
+    --seal-soft:    #EDE3EB;
+
+    --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
+    --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --shadow-card:  0 8px 18px -10px rgba(0,0,0,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-stack);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 36px 32px 96px;
+  }
+  .page { max-width: 1100px; margin: 0 auto; }
+
+  .masthead { padding-bottom: 22px; margin-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .crumb { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px; }
+  h1.title { font-family: var(--font-serif); font-size: 28px; font-weight: 500; letter-spacing: -0.012em; margin: 0 0 8px; }
+  .opening { font-family: var(--font-serif); font-style: italic; font-size: 15.5px; color: var(--ink-soft); margin: 0; max-width: 700px; }
+
+  .scenes {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { .scenes { grid-template-columns: 1fr; } }
+
+  .scene-cap-row {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .scene-cap-row .num {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    color: var(--seal); text-transform: uppercase;
+    border: 1px solid var(--seal-soft); background: var(--seal-soft);
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .scene-cap-row h2 {
+    font-family: var(--font-serif);
+    font-size: 17px; font-weight: 500;
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+  .scene-sub {
+    color: var(--ink-faint);
+    font-size: 13px;
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    max-width: 600px;
+  }
+
+  /* ========== Pre-meeting toggle (left column) ========== */
+  .pre {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    padding: 18px 18px 16px;
+  }
+  .pre-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .pre-head .ico {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--seal-soft);
+    color: var(--seal);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .pre-head h3 {
+    font-family: var(--font-serif);
+    font-size: 15px; font-weight: 500;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .pre-head .meeting-meta {
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  .pre-body {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    letter-spacing: -0.002em;
+    margin: 0 0 14px;
+  }
+  .pre-body em { color: var(--ink); font-style: italic; }
+
+  .toggle-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--seal-soft);
+    border-radius: 8px;
+  }
+  .toggle-row.on .toggle { background: var(--seal); }
+  .toggle-row.on .toggle::after { transform: translateX(16px); }
+  .toggle {
+    width: 38px; height: 22px;
+    border-radius: 999px;
+    background: var(--rule);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 200ms ease;
+  }
+  .toggle::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--panel);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    transition: transform 200ms ease;
+  }
+  .toggle-label {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .toggle-label .sub {
+    display: block;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    font-style: italic;
+    margin-top: 1px;
+  }
+
+  .pre-footnote {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px dotted var(--rule);
+    font-size: 11px;
+    color: var(--ink-faint);
+    line-height: 1.55;
+    font-style: italic;
+    font-family: var(--font-serif);
+  }
+
+  /* ========== The Hearth + Murmur view (right column) — masked ========== */
+  .canvas {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    box-shadow: var(--shadow-card);
+    padding: 26px 28px;
+    position: relative;
+  }
+
+  /* the small "marked sensitive" chip in the header */
+  .canvas-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .canvas-head h3 {
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+  .seal-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px;
+    background: var(--seal-soft);
+    color: var(--seal);
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+  }
+  .seal-chip svg { width: 10px; height: 10px; flex-shrink: 0; }
+  .canvas-head .when {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* the response-grid: synthesis L, dossier R */
+  .response-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 28px;
+    align-items: start;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 880px) { .response-grid { grid-template-columns: 1fr; } }
+
+  /* ========== Vellum overlay — the body is masked, not redacted ==========
+     The mask is a paper-finish overlay, not asterisks. Looks deliberately covered. */
+  .masked {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 130px;
+  }
+  .masked .underlay {
+    /* the actual prose, blurred and desaturated, behind the vellum */
+    padding: 14px 0;
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    line-height: 1.62;
+    color: var(--ink-soft);
+    filter: blur(6px);
+    opacity: 0.32;
+    user-select: none;
+  }
+  .masked .vellum {
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--vellum) 0px,
+        var(--vellum) 8px,
+        var(--bg) 8px,
+        var(--bg) 16px
+      );
+    background-color: rgba(247,245,239,0.85);
+    background-blend-mode: multiply;
+    border: 1px solid var(--seal-soft);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 18px;
+    text-align: center;
+  }
+  .masked .vellum .v-glyph {
+    width: 24px; height: 24px;
+    color: var(--seal);
+    margin-bottom: 10px;
+    opacity: 0.85;
+  }
+  .masked .vellum .v-line {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    max-width: 380px;
+    letter-spacing: -0.002em;
+  }
+  .masked .vellum .v-line .word {
+    color: var(--seal);
+    font-style: normal;
+    font-family: var(--font-stack);
+    font-weight: 600;
+  }
+  .masked .vellum .v-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--brand-strong);
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--brand-soft);
+    padding-bottom: 1px;
+    cursor: pointer;
+  }
+  .masked .vellum .v-action:hover { border-bottom-color: var(--brand-strong); }
+  .masked .vellum .v-foot {
+    margin-top: 12px;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* ========== Dossier card — visible but content masked too ========== */
+  .dossier {
+    background: var(--panel-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    box-shadow: var(--shadow-card);
+  }
+  .dossier-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .dossier-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--seal-soft);
+    color: var(--seal);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif); font-size: 14px; font-weight: 500;
+    border: 1px solid var(--seal-soft);
+  }
+  .dossier-name {
+    font-family: var(--font-serif);
+    font-size: 14.5px; font-weight: 500;
+    color: var(--ink); line-height: 1.2;
+  }
+  .dossier-role {
+    font-size: 10.5px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+    margin-top: 2px;
+  }
+  .dossier .seal-line {
+    margin: 4px 0 8px;
+    padding: 6px 8px;
+    background:
+      repeating-linear-gradient(135deg, var(--vellum) 0px, var(--vellum) 5px, transparent 5px, transparent 12px),
+      var(--panel);
+    border: 1px solid var(--seal-soft);
+    border-radius: 6px;
+    font-size: 11.5px;
+    color: var(--seal);
+    font-style: italic;
+    text-align: center;
+    font-family: var(--font-serif);
+  }
+  .dossier-stat {
+    display: flex; align-items: center; gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+  .dossier-stat .num { color: var(--ink-soft); font-weight: 600; }
+
+  /* ========== Fragment row — masked ========== */
+  .frag {
+    position: relative;
+    padding: 12px 6px 12px 18px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .frag:last-of-type { border-bottom: none; }
+  .frag .stripe {
+    position: absolute; left: 0; top: 16px; bottom: 16px; width: 2px;
+    border-radius: 1px;
+    background: var(--seal);
+  }
+  .frag .frag-attr {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--ink-faint);
+  }
+  .frag .frag-attr .who { color: var(--ink-soft); }
+  .frag .frag-text {
+    color: var(--ink-soft); font-size: 13px; line-height: 1.55;
+    font-family: var(--font-serif);
+  }
+  .frag .frag-text.masked-line {
+    /* line-level masking: hatched bar in place of words */
+    height: 14px;
+    background:
+      repeating-linear-gradient(135deg, var(--vellum) 0px, var(--vellum) 4px, var(--panel-soft) 4px, var(--panel-soft) 9px);
+    border-radius: 3px;
+    width: 78%;
+    margin: 4px 0;
+  }
+  .frag .frag-text.masked-line.short { width: 42%; }
+  .frag .frag-source {
+    margin-top: 8px;
+    font-size: 11px; color: var(--ink-faint);
+  }
+  .frag .frag-source a {
+    color: var(--ink-soft); text-decoration: none;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .frag .frag-source a:hover { color: var(--brand-strong); border-bottom-color: var(--brand-soft); }
+
+  .canvas-foot {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-serif);
+    font-style: italic;
+    line-height: 1.55;
+  }
+  .canvas-foot .ent { color: var(--seal); font-style: normal; font-weight: 600; font-family: var(--font-stack); font-size: 11px; text-transform: uppercase; letter-spacing: 0.10em; }
+
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="crumb">Brain Memory · v9 · Rachel</div>
+    <h1 class="title">Sensitive meeting</h1>
+    <p class="opening">Pre-meeting toggle on the left. Post-meeting Hearth + Murmur view on the right, with the body masked behind a paper-finish vellum — deliberately covered, not broken. Click-through reveals.</p>
+  </header>
+
+  <div class="scenes">
+
+    <!-- ========== LEFT: pre-meeting toggle ========== -->
+    <div>
+      <div class="scene-cap-row">
+        <span class="num">a</span>
+        <h2>Pre-meeting · marking sensitive</h2>
+      </div>
+      <p class="scene-sub">A toggle that sits on the meeting card before recording starts. Once on, the meeting carries the seal through every downstream surface.</p>
+
+      <div class="pre">
+        <div class="pre-head">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Quarterly board check-in</h3>
+            <div class="meeting-meta">today · 4:00 pm · 3 attendees</div>
+          </div>
+        </div>
+        <p class="pre-body">
+          When this is on, Docknote will <em>still</em> transcribe and synthesise as usual,
+          but every surface that mentions this meeting will mask its body until you ask to see it.
+          The seal travels with the meeting.
+        </p>
+        <div class="toggle-row on">
+          <span class="toggle" role="switch" aria-checked="true"></span>
+          <div class="toggle-label">
+            Mark sensitive
+            <span class="sub">on · seal will travel to Hearth, Murmur, Inbox</span>
+          </div>
+        </div>
+        <p class="pre-footnote">
+          Sensitive meetings are excluded from any synthesis prompt that routes outside <code style="font-family:var(--font-mono);font-size:10.5px;">snapgpu</code>. They never reach Claude even if you've opted into Claude routing for the rest of your meetings.
+        </p>
+      </div>
+    </div>
+
+    <!-- ========== RIGHT: Hearth + Murmur view, masked ========== -->
+    <div>
+      <div class="scene-cap-row">
+        <span class="num">b</span>
+        <h2>After the meeting · Hearth &amp; Murmur, masked</h2>
+      </div>
+      <p class="scene-sub">The view renders. The synthesis paragraph is replaced by a vellum overlay; the dossier carries the seal; the fragment list shows hatched bars in place of words. <em>Reveal for this session</em> opens the body without unmarking the meeting.</p>
+
+      <div class="canvas">
+        <div class="canvas-head">
+          <h3>Quarterly board check-in</h3>
+          <span class="seal-chip" aria-label="Marked sensitive">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="2"/>
+              <path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Marked sensitive
+          </span>
+          <span class="when">today · 4:00 pm</span>
+        </div>
+
+        <div class="response-grid">
+
+          <div class="masked" aria-label="Synthesis hidden by sensitive marker">
+            <div class="underlay">
+              The board pushed back on the Q3 timeline twice — once on the engineering scope and once on the
+              fundraise window. The pricing experiment landed well; the next call is whether to extend the
+              monthly billing cohort beyond ten advisors before the next board meeting.
+            </div>
+            <div class="vellum">
+              <svg class="v-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <p class="v-line">
+                This meeting is <span class="word">marked sensitive</span>. The synthesis is hidden by default.
+              </p>
+              <a class="v-action">Reveal for this session →</a>
+              <div class="v-foot">stays sealed in Brain Inbox · in patterns.md · in the search index.</div>
+            </div>
+          </div>
+
+          <aside class="dossier">
+            <div class="dossier-head">
+              <div class="dossier-avatar">QB</div>
+              <div>
+                <div class="dossier-name">Quarterly board</div>
+                <div class="dossier-role">Sealed · 3 attendees</div>
+              </div>
+            </div>
+            <div class="seal-line">card body sealed</div>
+            <div class="dossier-stat">
+              <span><span class="num">2 decisions</span> · <span class="num">1 open question</span> · sealed</span>
+            </div>
+          </aside>
+        </div>
+
+        <article class="frag">
+          <span class="stripe"></span>
+          <div class="frag-attr"><span class="who">Quarterly board</span> · 4:14 pm · sealed</div>
+          <div class="frag-text masked-line"></div>
+          <div class="frag-text masked-line short"></div>
+          <div class="frag-source">from <a href="#">quarterly-board-04may / 14:08</a> · sealed</div>
+        </article>
+
+        <article class="frag">
+          <span class="stripe"></span>
+          <div class="frag-attr"><span class="who">Quarterly board</span> · 4:31 pm · sealed</div>
+          <div class="frag-text masked-line"></div>
+          <div class="frag-text masked-line short"></div>
+          <div class="frag-source">from <a href="#">quarterly-board-04may / 31:42</a> · sealed</div>
+        </article>
+
+        <article class="frag">
+          <span class="stripe"></span>
+          <div class="frag-attr"><span class="who">Quarterly board</span> · 4:48 pm · sealed · decision</div>
+          <div class="frag-text masked-line"></div>
+          <div class="frag-source">from <a href="#">quarterly-board-04may / 48:11</a> · sealed</div>
+        </article>
+
+        <p class="canvas-foot">
+          <span class="ent">Hatching, vellum, paper.</span> &nbsp;
+          The mask is a design, not <code style="font-family:var(--font-mono);font-size:10.5px;">***</code>. The page reads as deliberately covered — like a redacted briefing — and the user can lift the cover for one session without changing the meeting's status.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">mockup by Rachel · v9 / sensitive-meeting · 2026-05-04</div>
+
+</div>
+</body>
+</html>

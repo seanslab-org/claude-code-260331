@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brain Memory v8 — actual brain &amp; memory visuals</title>
+<style>
+  :root {
+    --bg: #0c0d10;
+    --panel: #15171b;
+    --panel-soft: #1c1f24;
+    --ink: #e8e8ea;
+    --ink-soft: #a8acb3;
+    --ink-faint: #6c707a;
+    --accent: #ff8c42;
+    --link: #82b1ff;
+    --border: #25282e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.5; }
+  header { padding: 32px 40px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(12,13,16,0.92); backdrop-filter: blur(8px); z-index: 10; }
+  header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  header .meta { color: var(--ink-faint); font-size: 12px; }
+  nav.toc { padding: 12px 40px; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; }
+  nav.toc a { color: var(--ink-soft); text-decoration: none; padding: 4px 10px; border-radius: 12px; border: 1px solid var(--border); }
+  nav.toc a:hover { color: var(--ink); border-color: var(--accent); }
+  main { padding: 24px 40px 80px; max-width: 1600px; margin: 0 auto; }
+  section { margin-top: 36px; }
+  section h2 { font-size: 16px; font-weight: 600; color: var(--accent); margin: 0 0 16px; letter-spacing: 0.02em; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  section .lede { font-size: 12px; color: var(--ink-soft); margin: -8px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+  .card a.imglink { display: block; }
+  .card img { width: 100%; height: auto; display: block; background: white; }
+  .card .meta { padding: 10px 14px 12px; }
+  .card .meta h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+  .card .meta .src { font-size: 11px; color: var(--ink-faint); }
+  .card .meta .src a { color: var(--link); text-decoration: none; }
+  .card .meta .src a:hover { text-decoration: underline; }
+  .docknote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+  .docknote-card { background: linear-gradient(180deg, #181612 0%, #15171b 100%); border: 1px solid #2c2520; border-radius: 8px; overflow: hidden; }
+  .docknote-card h3 { margin: 0; padding: 12px 14px 6px; font-size: 14px; font-weight: 600; color: #ffb88a; }
+  .docknote-card .preview { width: 100%; height: 320px; border: 0; border-top: 1px solid var(--border); background: white; display: block; }
+  .docknote-card .links { padding: 8px 14px 12px; font-size: 11px; }
+  .docknote-card .links a { color: var(--link); text-decoration: none; margin-right: 12px; }
+  .intro { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: var(--ink-soft); }
+  .intro strong { color: var(--ink); }
+  details summary { cursor: pointer; font-size: 12px; color: var(--ink-soft); margin-bottom: 12px; }
+  details summary:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Brain Memory v8 — actual brain &amp; memory visuals</h1>
+  <div class="meta">2026-05-04 · Brain anatomy figures, knowledge graph renderings, memory streams, concept art · architecture flowcharts dropped</div>
+</header>
+
+<nav class="toc">
+  <a href="#docknote">Docknote mockups</a>
+  <a href="#brain">Brain &amp; neuroscience</a>
+  <a href="#kg">Knowledge graphs as memory</a>
+  <a href="#stream">Memory streams &amp; timelines</a>
+  <a href="#tax">Memory taxonomies</a>
+  <a href="#concept">Memory concept art</a>
+  <a href="#cluster">Memory clusters &amp; embeddings</a>
+</nav>
+
+<main>
+
+<div class="intro">
+  <strong>What's here:</strong> visuals that <em>depict</em> memory or the brain — anatomy figures from neuroscience-inspired AI memory papers, rendered knowledge-graph network drawings, memory-stream and event-segmentation timelines, cognitive-architecture taxonomies, and brain-themed concept art. No system flowcharts, no product UI.
+</div>
+
+<section id="docknote">
+  <h2>0. Docknote — your own Brain Memory mockups</h2>
+  <p class="lede">From <code>~/seanslab/Docknote/ux-mockups/brain-memory/</code>. The product surface for v8.</p>
+  <div class="docknote-grid">
+
+    <div class="docknote-card">
+      <h3>Murmur · Tide · Hifi — v8 (latest)</h3>
+      <div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v8.html" target="_blank">Open full</a></div>
+      <iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v8.html"></iframe>
+    </div>
+
+    <div class="docknote-card">
+      <h3>Personas Gallery v1</h3>
+      <div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/personas-gallery-v1.html" target="_blank">Open full</a></div>
+      <iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/personas-gallery-v1.html"></iframe>
+    </div>
+
+    <div class="docknote-card">
+      <h3>Scan and Synthesis</h3>
+      <div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/scan-and-synthesis.html" target="_blank">Open full</a></div>
+      <iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/scan-and-synthesis.html"></iframe>
+    </div>
+
+  </div>
+
+  <details style="margin-top: 12px;">
+    <summary>Prior versions (v2 → v7, v1)</summary>
+    <div class="docknote-grid" style="margin-top: 12px;">
+      <div class="docknote-card"><h3>v7</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v7.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v7.html"></iframe></div>
+      <div class="docknote-card"><h3>v6</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v6.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v6.html"></iframe></div>
+      <div class="docknote-card"><h3>v5</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v5.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v5.html"></iframe></div>
+      <div class="docknote-card"><h3>v4</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v4.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v4.html"></iframe></div>
+      <div class="docknote-card"><h3>v3</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v3.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v3.html"></iframe></div>
+      <div class="docknote-card"><h3>v2</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v2.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi-v2.html"></iframe></div>
+      <div class="docknote-card"><h3>v1 (original)</h3><div class="links"><a href="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi.html" target="_blank">Open</a></div><iframe class="preview" src="file:///Users/seansong/seanslab/Docknote/ux-mockups/brain-memory/murmur-tide-hifi.html"></iframe></div>
+    </div>
+  </details>
+</section>
+
+<section id="brain">
+  <h2>1. Brain &amp; neuroscience figures</h2>
+  <p class="lede">Anatomy and human-memory analogies pulled into AI memory papers.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2405.14831v1/x1.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2405.14831v1/x1.png" alt="HippoRAG hippocampus + AI architecture"></a>
+      <div class="meta">
+        <h3>HippoRAG — hippocampus + AI architecture, side by side</h3>
+        <div class="src">Figure 1 · <a href="https://arxiv.org/abs/2405.14831" target="_blank">arXiv 2405.14831 (NeurIPS 2024)</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2405.14831v1/x2.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2405.14831v1/x2.png" alt="HippoRAG encoding/indexing/retrieval"></a>
+      <div class="meta">
+        <h3>HippoRAG — encoding / indexing / retrieval, mirroring human long-term memory</h3>
+        <div class="src">Figure 2 · <a href="https://arxiv.org/abs/2405.14831" target="_blank">arXiv 2405.14831</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2504.15965v1/extracted/6380911/memory-human-ai.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2504.15965v1/extracted/6380911/memory-human-ai.png" alt="Human memory ↔ AI memory parallels"></a>
+      <div class="meta">
+        <h3>From Human Memory to AI Memory — parallels diagram</h3>
+        <div class="src">Survey Figure 1 · <a href="https://arxiv.org/abs/2504.15965" target="_blank">arXiv 2504.15965</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2403.11901v1/x1.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2403.11901v1/x1.png" alt="Larimar brain-inspired episodic memory"></a>
+      <div class="meta">
+        <h3>Larimar — brain-inspired episodic memory (hippocampus / neocortex coupling)</h3>
+        <div class="src">Figure 1 · <a href="https://arxiv.org/abs/2403.11901" target="_blank">arXiv 2403.11901 (ICML 2024)</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2305.10250/assets/x1.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2305.10250/assets/x1.png" alt="MemoryBank with Ebbinghaus forgetting"></a>
+      <div class="meta">
+        <h3>MemoryBank — with Ebbinghaus forgetting curve R = e^(-t/S)</h3>
+        <div class="src">Figure 1 · <a href="https://arxiv.org/abs/2305.10250" target="_blank">arXiv 2305.10250 (AAAI 2024)</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="kg">
+  <h2>2. Knowledge graphs as memory — rendered networks</h2>
+  <p class="lede">Actual graph drawings (nodes + edges visible), not boxes-and-arrows architecture.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://gdotv.com/wp-content/uploads/2025/09/4_cognee-lotr.png" target="_blank"><img loading="lazy" src="https://gdotv.com/wp-content/uploads/2025/09/4_cognee-lotr.png" alt="Cognee LotR knowledge graph"></a>
+      <div class="meta">
+        <h3>Cognee — Lord of the Rings knowledge graph</h3>
+        <div class="src"><a href="https://gdotv.com/blog/cognee-graphs-that-learn/" target="_blank">gdotv: Cognee — graphs that learn</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://gdotv.com/wp-content/uploads/2025/09/6_cognee-pride-and-prejudice.png" target="_blank"><img loading="lazy" src="https://gdotv.com/wp-content/uploads/2025/09/6_cognee-pride-and-prejudice.png" alt="Cognee Pride and Prejudice graph"></a>
+      <div class="meta">
+        <h3>Cognee — Pride and Prejudice knowledge graph</h3>
+        <div class="src"><a href="https://gdotv.com/blog/cognee-graphs-that-learn/" target="_blank">gdotv blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://gdotv.com/wp-content/uploads/2025/09/7_cognee-a-tale-of-two-cities.png" target="_blank"><img loading="lazy" src="https://gdotv.com/wp-content/uploads/2025/09/7_cognee-a-tale-of-two-cities.png" alt="Cognee Tale of Two Cities graph"></a>
+      <div class="meta">
+        <h3>Cognee — A Tale of Two Cities knowledge graph</h3>
+        <div class="src"><a href="https://gdotv.com/blog/cognee-graphs-that-learn/" target="_blank">gdotv blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://gdotv.com/wp-content/uploads/2025/09/8_cognee-moby-dick.png" target="_blank"><img loading="lazy" src="https://gdotv.com/wp-content/uploads/2025/09/8_cognee-moby-dick.png" alt="Cognee Moby Dick graph"></a>
+      <div class="meta">
+        <h3>Cognee — Moby Dick knowledge graph (large network)</h3>
+        <div class="src"><a href="https://gdotv.com/blog/cognee-graphs-that-learn/" target="_blank">gdotv blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://gdotv.com/wp-content/uploads/2025/09/cogneenarrow.png" target="_blank"><img loading="lazy" src="https://gdotv.com/wp-content/uploads/2025/09/cogneenarrow.png" alt="Cognee narrow KG banner"></a>
+      <div class="meta">
+        <h3>Cognee — narrow knowledge-graph banner</h3>
+        <div class="src"><a href="https://gdotv.com/blog/cognee-graphs-that-learn/" target="_blank">gdotv blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://raw.githubusercontent.com/kingjulio8238/Memary/main/diagrams/kg.png" target="_blank"><img loading="lazy" src="https://raw.githubusercontent.com/kingjulio8238/Memary/main/diagrams/kg.png" alt="Memary knowledge graph"></a>
+      <div class="meta">
+        <h3>Memary — agent-memory knowledge graph render</h3>
+        <div class="src"><a href="https://github.com/kingjulio8238/Memary" target="_blank">Memary repo</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://raw.githubusercontent.com/kingjulio8238/Memary/main/diagrams/memory_module.png" target="_blank"><img loading="lazy" src="https://raw.githubusercontent.com/kingjulio8238/Memary/main/diagrams/memory_module.png" alt="Memary memory module"></a>
+      <div class="meta">
+        <h3>Memary — memory module (linking / compression network)</h3>
+        <div class="src"><a href="https://github.com/kingjulio8238/Memary" target="_blank">Memary repo</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://dist.neo4j.com/wp-content/uploads/20260204005137/1zSO8lcZ_qwvFg2pdaf6__Q.png" target="_blank"><img loading="lazy" src="https://dist.neo4j.com/wp-content/uploads/20260204005137/1zSO8lcZ_qwvFg2pdaf6__Q.png" alt="Neo4j Lenny's Memory graph"></a>
+      <div class="meta">
+        <h3>Neo4j — "Lenny's Memory" agent context graph (mem0-style)</h3>
+        <div class="src"><a href="https://neo4j.com/blog/developer/meet-lennys-memory-building-context-graphs-for-ai-agents/" target="_blank">Neo4j blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://cdn-images-1.medium.com/max/1024/0*WNycmjCXoXjuxm4U" target="_blank"><img loading="lazy" src="https://cdn-images-1.medium.com/max/1024/0*WNycmjCXoXjuxm4U" alt="Graphiti temporal KG architecture"></a>
+      <div class="meta">
+        <h3>Graphiti / Zep — temporal knowledge graph</h3>
+        <div class="src"><a href="https://neo4j.com/blog/developer/graphiti-knowledge-graph-memory/" target="_blank">Neo4j: Graphiti — KG memory for agents</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://api-prod.usenotioncms.com/v1/proxy-1/block/13021ab7-b085-8059-91dc-c77454b41a37/06d5f190-66ee-41fb-a187-1e26904ebbd1/1c41b2c7-a8d1-4173-ac9d-b4dc724ebdcb/CleanShot_2024-10-30.082x.png" target="_blank"><img loading="lazy" src="https://api-prod.usenotioncms.com/v1/proxy-1/block/13021ab7-b085-8059-91dc-c77454b41a37/06d5f190-66ee-41fb-a187-1e26904ebbd1/1c41b2c7-a8d1-4173-ac9d-b4dc724ebdcb/CleanShot_2024-10-30.082x.png" alt="Reflect web of backlinks"></a>
+      <div class="meta">
+        <h3>Reflect — web of backlinked notes (rendered graph view)</h3>
+        <div class="src"><a href="https://reflect.app/blog/what-are-backlinks-a-guide" target="_blank">Reflect blog: what are backlinks?</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="stream">
+  <h2>3. Memory streams &amp; timelines</h2>
+  <p class="lede">How memories are sequenced, retrieved, and how surprise segments events.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_architecture2.png" target="_blank"><img loading="lazy" src="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_architecture2.png" alt="Generative Agents memory stream architecture"></a>
+      <div class="meta">
+        <h3>Generative Agents — perception → memory stream → retrieval → planning → action</h3>
+        <div class="src">Figure 5 · <a href="https://arxiv.org/abs/2304.03442" target="_blank">Park et al. 2023, arXiv 2304.03442</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_reflection6.png" target="_blank"><img loading="lazy" src="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_reflection6.png" alt="Generative Agents reflection tree"></a>
+      <div class="meta">
+        <h3>Generative Agents — reflection tree (memory stream → recursive higher-level inferences)</h3>
+        <div class="src">Figure 7 · <a href="https://arxiv.org/abs/2304.03442" target="_blank">Park et al. 2023</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_info_diff2.png" target="_blank"><img loading="lazy" src="https://ar5iv.labs.arxiv.org/html/2304.03442/assets/figures/figure_info_diff2.png" alt="Generative Agents info diffusion"></a>
+      <div class="meta">
+        <h3>Generative Agents — Isabella's Valentine's party diffusion across 12 agents over time</h3>
+        <div class="src">Figure 9 · <a href="https://arxiv.org/abs/2304.03442" target="_blank">Park et al. 2023</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2502.06975/x1.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2502.06975/x1.png" alt="Episodic memory missing piece"></a>
+      <div class="meta">
+        <h3>Episodic Memory is the Missing Piece — encoding / consolidation / retrieval flow</h3>
+        <div class="src">Figure 1 · <a href="https://arxiv.org/abs/2502.06975" target="_blank">arXiv 2502.06975</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2407.09450v1/x2.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2407.09450v1/x2.png" alt="EM-LLM event segmentation"></a>
+      <div class="meta">
+        <h3>EM-LLM — temporal contiguity + GPT-2 attention scores + surprise-based segmentation</h3>
+        <div class="src">Figure 2 · <a href="https://arxiv.org/abs/2407.09450" target="_blank">arXiv 2407.09450 (ICLR 2025)</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2407.09450v1/x3.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2407.09450v1/x3.png" alt="EM-LLM cohesion/separation"></a>
+      <div class="meta">
+        <h3>EM-LLM — human event segmentation vs computational methods (cohesion / separation surprise)</h3>
+        <div class="src">Figure 3 · <a href="https://arxiv.org/abs/2407.09450" target="_blank">arXiv 2407.09450</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="tax">
+  <h2>4. Memory taxonomies &amp; cognitive architectures</h2>
+  <p class="lede">How researchers carve memory into types: working, episodic, semantic, procedural.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2309.02427v3/x4.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2309.02427v3/x4.png" alt="CoALA cognitive architecture"></a>
+      <div class="meta">
+        <h3>CoALA — cognitive architecture for language agents (working / episodic / semantic / procedural)</h3>
+        <div class="src">Figure 4 · <a href="https://arxiv.org/abs/2309.02427" target="_blank">arXiv 2309.02427</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2309.02427v3/x2.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2309.02427v3/x2.png" alt="Soar cognitive architecture"></a>
+      <div class="meta">
+        <h3>CoALA — Soar cognitive architecture (sensory groundings, long-term memory, decision)</h3>
+        <div class="src">Figure 2 · <a href="https://arxiv.org/abs/2309.02427" target="_blank">arXiv 2309.02427</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2309.02427v3/x5.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2309.02427v3/x5.png" alt="CoALA agent action space"></a>
+      <div class="meta">
+        <h3>CoALA — agent action-space taxonomy (internal memory accesses vs external interactions)</h3>
+        <div class="src">Figure 5 · <a href="https://arxiv.org/abs/2309.02427" target="_blank">arXiv 2309.02427</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://github.com/TsinghuaC3I/Awesome-Memory-for-Agents/raw/main/assets/cover.png" target="_blank"><img loading="lazy" src="https://github.com/TsinghuaC3I/Awesome-Memory-for-Agents/raw/main/assets/cover.png" alt="Awesome-Memory-for-Agents cover"></a>
+      <div class="meta">
+        <h3>Awesome-Memory-for-Agents — taxonomy cover figure</h3>
+        <div class="src"><a href="https://github.com/TsinghuaC3I/Awesome-Memory-for-Agents" target="_blank">repo</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="concept">
+  <h2>5. Memory concept art</h2>
+  <p class="lede">Brand-side imagery used to depict "memory" / "brain" without being a system diagram.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://supermemory.ai/blog/content/images/size/w1000/2025/06/blog-cover.png" target="_blank"><img loading="lazy" src="https://supermemory.ai/blog/content/images/size/w1000/2025/06/blog-cover.png" alt="Supermemory blog hero"></a>
+      <div class="meta">
+        <h3>Supermemory — "memory engine inspired by the human brain" hero</h3>
+        <div class="src"><a href="https://supermemory.ai/blog/memory-engine/" target="_blank">Supermemory blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://supermemory.ai/blog/content/images/2025/06/SM-2-gradient.png" target="_blank"><img loading="lazy" src="https://supermemory.ai/blog/content/images/2025/06/SM-2-gradient.png" alt="Supermemory gradient concept"></a>
+      <div class="meta">
+        <h3>Supermemory — "memory as a service" gradient</h3>
+        <div class="src"><a href="https://supermemory.ai/blog/memory-engine/" target="_blank">Supermemory blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://cdn.prod.website-files.com/66bb3d1f468f0f3848a20a84/67a44735ae8c2311297490c9_letta_memory_2x.webp" target="_blank"><img loading="lazy" src="https://cdn.prod.website-files.com/66bb3d1f468f0f3848a20a84/67a44735ae8c2311297490c9_letta_memory_2x.webp" alt="Letta memory concept art"></a>
+      <div class="meta">
+        <h3>Letta — agent memory architecture concept art</h3>
+        <div class="src"><a href="https://www.letta.com/blog" target="_blank">Letta blog</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://cdn.prod.website-files.com/66bb3d1f468f0f3848a20a84/6824ff9e8b9b8cfa0b38d37d_memory-h-l4.png" target="_blank"><img loading="lazy" src="https://cdn.prod.website-files.com/66bb3d1f468f0f3848a20a84/6824ff9e8b9b8cfa0b38d37d_memory-h-l4.png" alt="Letta hierarchical memory concept"></a>
+      <div class="meta">
+        <h3>Letta — hierarchical memory layers concept art</h3>
+        <div class="src"><a href="https://www.letta.com/blog" target="_blank">Letta blog</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="cluster">
+  <h2>6. Memory clusters &amp; embeddings</h2>
+  <p class="lede">t-SNE plots showing how memories organize themselves in vector space, plus Zettelkasten-style memory linking.</p>
+  <div class="grid">
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2502.12110v1/x3.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2502.12110v1/x3.png" alt="A-MEM Zettelkasten"></a>
+      <div class="meta">
+        <h3>A-MEM — Zettelkasten-inspired memory linking</h3>
+        <div class="src">Figure 2 · <a href="https://arxiv.org/abs/2502.12110" target="_blank">arXiv 2502.12110 (NeurIPS 2025)</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2502.12110v1/x9.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2502.12110v1/x9.png" alt="A-MEM t-SNE clusters"></a>
+      <div class="meta">
+        <h3>A-MEM — t-SNE of A-MEM memory clusters vs base memory (dialogue 1)</h3>
+        <div class="src">Figure 4 · <a href="https://arxiv.org/abs/2502.12110" target="_blank">arXiv 2502.12110</a></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <a class="imglink" href="https://arxiv.org/html/2502.12110v1/x10.png" target="_blank"><img loading="lazy" src="https://arxiv.org/html/2502.12110v1/x10.png" alt="A-MEM t-SNE clusters dialogue 2"></a>
+      <div class="meta">
+        <h3>A-MEM — t-SNE memory clusters (dialogue 2)</h3>
+        <div class="src">Figure 4 · <a href="https://arxiv.org/abs/2502.12110" target="_blank">arXiv 2502.12110</a></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+</body>
+</html>

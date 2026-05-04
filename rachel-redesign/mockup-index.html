@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Brain Memory v9 — director's contact sheet · Rachel</title>
+<style>
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --vellum:       #F0EBDC;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E8E4D8;
+    --rule-soft:    #F0ECE0;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --c-1:  #5B9292; --c-2:  #C97A6E; --c-3:  #C99363;
+    --c-10: #6E7E8E; --c-11: #B47BA0;
+    --seal: #8E6F8A; --seal-soft: #EDE3EB;
+    --past: #8E9EAE; --past-soft: #DCE0E5;
+
+    --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
+    --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --shadow-card:  0 14px 30px -18px rgba(0,0,0,0.16), 0 2px 6px -2px rgba(0,0,0,0.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-stack);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 36px 32px 96px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+
+  .masthead { padding-bottom: 26px; margin-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .crumb { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px; }
+  h1.title { font-family: var(--font-serif); font-size: 34px; font-weight: 500; letter-spacing: -0.014em; margin: 0 0 10px; }
+  .opening { font-family: var(--font-serif); font-style: italic; font-size: 17px; color: var(--ink-soft); margin: 0; max-width: 720px; letter-spacing: -0.005em; }
+  .opening .warm { color: var(--ink); font-style: normal; font-weight: 500; }
+  .signed {
+    margin-top: 10px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* ========== Open-me-first card — different paper, sits at the top ========== */
+  .open-first {
+    margin-bottom: 36px;
+    background: var(--vellum);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 22px 26px;
+    box-shadow: var(--shadow-card);
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 800px) { .open-first { grid-template-columns: 1fr; } }
+
+  .open-first .of-cap {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--brand-strong);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .open-first h2 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    margin: 0 0 8px;
+  }
+  .open-first p {
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin: 0;
+    letter-spacing: -0.002em;
+  }
+  .open-first p em { color: var(--ink); font-style: italic; }
+  .open-first .verb {
+    margin-top: 12px;
+    display: inline-block;
+    color: var(--brand-strong);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    border-bottom: 1px solid var(--brand-soft);
+    padding-bottom: 1px;
+  }
+  .open-first .verb:hover { border-bottom-color: var(--brand-strong); }
+
+  .of-aside {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    padding: 14px 14px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    line-height: 1.55;
+  }
+  .of-aside strong { color: var(--ink-soft); font-weight: 600; display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.10em; margin-bottom: 4px; }
+
+  /* ========== Section heading ========== */
+  .section-h {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  /* ========== Mockup grid ========== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-bottom: 44px;
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 660px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: transform 200ms ease, box-shadow 200ms ease;
+    position: relative;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 40px -22px rgba(0,0,0,0.22), 0 4px 10px -3px rgba(0,0,0,0.06);
+  }
+
+  /* the thumbnail — pure CSS preview, not an iframe */
+  .thumb {
+    height: 180px;
+    border-bottom: 1px solid var(--rule-soft);
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .card-body {
+    padding: 14px 16px 16px;
+  }
+  .card-num {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--brand-strong);
+    margin-bottom: 4px;
+  }
+  .card-title {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  .card-blurb {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    letter-spacing: -0.002em;
+  }
+  .card-foot {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+  }
+  .card-foot .arrow {
+    color: var(--brand-strong);
+    margin-left: 4px;
+  }
+
+  /* ========== Thumbnail compositions — each one captures the surface's key move ========== */
+
+  /* Brain Inbox — slightly warmer paper, three stacked diff cards */
+  .thumb.inbox { background: #F4F1E8; padding: 18px 20px; }
+  .thumb.inbox .h {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .thumb.inbox .mini {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    font-size: 9.5px;
+  }
+  .thumb.inbox .mini .path {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .thumb.inbox .mini .path .field { color: var(--brand-strong); font-weight: 600; }
+  .thumb.inbox .mini .row { font-size: 9.5px; line-height: 1.45; }
+  .thumb.inbox .mini .row.was { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: rgba(201,122,110,0.55); }
+  .thumb.inbox .mini .row.now { color: var(--ink); }
+  .thumb.inbox .mini .row.now mark { background: rgba(91,146,146,0.16); color: var(--ink); padding: 0 1px; }
+
+  /* Hearth edit — three vertical states, miniature */
+  .thumb.hearth { background: var(--panel-soft); padding: 14px; display: flex; gap: 8px; }
+  .thumb.hearth .col {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    padding: 8px 8px;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+  .thumb.hearth .col.locked {
+    background:
+      repeating-linear-gradient(135deg, var(--vellum) 0px, var(--vellum) 4px, var(--panel) 4px, var(--panel) 10px);
+  }
+  .thumb.hearth .col.editing {
+    border-color: var(--brand-soft);
+    box-shadow: 0 0 0 3px rgba(27,191,203,0.10);
+  }
+  .thumb.hearth .col .nm {
+    font-family: var(--font-serif); font-weight: 600;
+    font-size: 9.5px; margin-bottom: 4px;
+  }
+  .thumb.hearth .col .ln {
+    height: 5px; background: var(--rule-soft); border-radius: 2px; margin-bottom: 4px;
+  }
+  .thumb.hearth .col .ln.short { width: 60%; }
+  .thumb.hearth .col .badge {
+    margin-top: 6px;
+    font-size: 7.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+  .thumb.hearth .col.editing .ln {
+    background: var(--brand-soft);
+  }
+
+  /* Time-travel — slider on top, card with diff highlight, cool palette */
+  .thumb.travel { background: var(--panel); padding: 14px; }
+  .thumb.travel .ribbon {
+    height: 3px; background: var(--past-soft); border-radius: 2px;
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .thumb.travel .ribbon::before {
+    content: ""; position: absolute; left: 0; top: 0;
+    width: 24%; height: 100%; background: var(--past); opacity: 0.55; border-radius: 2px;
+  }
+  .thumb.travel .ribbon::after {
+    content: ""; position: absolute; left: 24%; top: -3px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--past); transform: translateX(-50%);
+    box-shadow: 0 0 0 3px rgba(142,158,174,0.20);
+  }
+  .thumb.travel .here {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 9px;
+    color: var(--past);
+    margin-bottom: 8px;
+  }
+  .thumb.travel .field {
+    background: rgba(142,158,174,0.06);
+    border-left: 2px solid var(--past);
+    padding: 6px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+  .thumb.travel .field .nm {
+    font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em;
+    color: var(--ink-faint); margin-bottom: 2px;
+  }
+  .thumb.travel .field .v {
+    font-family: var(--font-serif); font-size: 10px; line-height: 1.4; color: var(--ink);
+  }
+  .thumb.travel .field .now {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dotted var(--rule);
+    font-size: 9px;
+    color: var(--ink-faint);
+    font-family: var(--font-serif);
+    text-decoration: line-through;
+    text-decoration-color: var(--past-soft);
+  }
+
+  /* Settings — two big paper rectangles with section heads */
+  .thumb.settings { background: var(--panel-soft); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .thumb.settings .paper {
+    background: var(--panel); border: 1px solid var(--rule-soft); border-radius: 6px;
+    padding: 8px 10px;
+    flex: 1;
+  }
+  .thumb.settings .paper .ph {
+    font-family: var(--font-serif);
+    font-size: 11px; font-weight: 500;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .thumb.settings .paper .pm {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .thumb.settings .paper .ln {
+    height: 4px; background: var(--rule-soft); border-radius: 2px; margin-bottom: 3px;
+  }
+  .thumb.settings .paper .ln.s { width: 70%; }
+  .thumb.settings .paper .ln.xs { width: 45%; }
+
+  /* Geomi — two scenes faded, two bubbles overlaid */
+  .thumb.geomi { background: var(--panel); padding: 0; display: flex; }
+  .thumb.geomi .half { flex: 1; padding: 16px; position: relative; }
+  .thumb.geomi .half + .half { border-left: 1px solid var(--rule-soft); }
+  .thumb.geomi .bg-line {
+    height: 4px; background: var(--rule-soft); border-radius: 2px;
+    margin-bottom: 6px; opacity: 0.5;
+  }
+  .thumb.geomi .bg-line.s { width: 60%; }
+  .thumb.geomi .bg-line.xs { width: 40%; }
+  .thumb.geomi .bubble {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    background: var(--panel);
+    border-radius: 7px;
+    padding: 6px 8px 6px;
+    box-shadow: 0 8px 18px -10px rgba(0,0,0,0.18);
+    width: 100px;
+    border: 1px solid var(--rule-soft);
+  }
+  .thumb.geomi .bubble.top { bottom: auto; top: 12px; }
+  .thumb.geomi .bubble .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--brand);
+    display: inline-block; margin-right: 4px; vertical-align: 1px;
+  }
+  .thumb.geomi .bubble .b-text {
+    font-family: var(--font-serif); font-size: 8.5px; line-height: 1.4;
+    color: var(--ink-soft); margin: 4px 0 4px;
+  }
+  .thumb.geomi .bubble .verb {
+    font-size: 8px; color: var(--brand-strong); font-weight: 600;
+    border-bottom: 1px solid var(--brand-soft);
+  }
+
+  /* Sync — three mini-frames */
+  .thumb.sync { background: var(--panel); padding: 12px; display: flex; gap: 6px; }
+  .thumb.sync .mini {
+    flex: 1;
+    border: 1px solid var(--rule-soft); border-radius: 5px;
+    padding: 8px 7px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    font-size: 8.5px;
+    color: var(--ink-faint);
+  }
+  .thumb.sync .mini .icn {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .thumb.sync .mini.guard {
+    background:
+      repeating-linear-gradient(135deg, var(--vellum) 0px, var(--vellum) 4px, transparent 4px, transparent 9px);
+    background-color: var(--bg);
+  }
+  .thumb.sync .mini.guard .icn { color: var(--c-2); }
+  .thumb.sync .mini.healthy { background: rgba(91,146,146,0.10); }
+  .thumb.sync .mini.healthy .icn { color: var(--c-1); }
+  .thumb.sync .mini .nm {
+    font-family: var(--font-stack); font-size: 8px; font-weight: 600;
+    color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Sensitive — masked synthesis with hatching */
+  .thumb.seal { background: var(--panel); padding: 14px; }
+  .thumb.seal .head {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .thumb.seal .head .nm {
+    font-family: var(--font-serif); font-size: 11px; font-weight: 500;
+    color: var(--ink);
+  }
+  .thumb.seal .head .chip {
+    margin-left: auto;
+    font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em;
+    color: var(--seal); background: var(--seal-soft);
+    padding: 2px 6px; border-radius: 999px;
+  }
+  .thumb.seal .panel {
+    height: 78px;
+    background:
+      repeating-linear-gradient(135deg, var(--vellum) 0px, var(--vellum) 6px, var(--bg) 6px, var(--bg) 12px);
+    border: 1px solid var(--seal-soft);
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--seal);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 9.5px;
+  }
+  .thumb.seal .panel .verb {
+    margin-top: 4px;
+    font-size: 8.5px;
+    color: var(--brand-strong);
+    border-bottom: 1px solid var(--brand-soft);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="crumb">Brain Memory · v9 · Director's contact sheet</div>
+    <h1 class="title">v9 — the brain learned things while you slept</h1>
+    <p class="opening">
+      Six new surfaces and a director's note. The v8 composition stays.
+      <span class="warm">What changes is the write side</span> — the Inbox, the edit affordances, the lock state, the time-travel, the always-loaded files — and Geomi's two new bubbles.
+      Every screen below honours one rule: reward attention, never demand it.
+    </p>
+    <p class="signed">— Rachel · 2026-05-04</p>
+  </header>
+
+  <!-- Open-me-first: creative direction doc -->
+  <a class="card" href="creative-direction.md" style="display:block; margin: 0;">
+    <div class="open-first" style="margin: 0;">
+      <div>
+        <div class="of-cap">Open me first · 1,800 words · 8-min read</div>
+        <h2>Creative direction</h2>
+        <p>The north star, the visual story, the motion language, the restraint principles, and the three signature flourishes I'd defend in a review. <em>Read this before looking at any mockup</em> — it grounds every decision below.</p>
+        <span class="verb">Read the doc →</span>
+      </div>
+      <div class="of-aside">
+        <strong>Inside</strong>
+        North star · visual story · color &amp; material · motion language · per-surface character moments · restraint principles · three signature flourishes · open questions for the team.
+      </div>
+    </div>
+  </a>
+
+  <!-- ========== Critical-path mockups ========== -->
+  <h3 class="section-h">Critical-path surfaces · the architecture depends on these</h3>
+
+  <div class="grid">
+
+    <a class="card" href="brain-inbox.html">
+      <div class="thumb inbox">
+        <div class="h">The brain learned things while you slept.</div>
+        <div class="mini">
+          <div class="path">person/alex-chen.md · <span class="field">role_line</span></div>
+          <div class="row was">VP Eng · pushes timeline back</div>
+          <div class="row now">VP Eng · <mark>willing to negotiate timeline</mark></div>
+        </div>
+        <div class="mini">
+          <div class="path">patterns.md · <span class="field">new theme</span></div>
+          <div class="row now" style="font-family: var(--font-serif); font-style: italic; color: var(--ink); font-size: 10px;">"Portability over confidentiality"</div>
+        </div>
+        <div class="mini">
+          <div class="path">person/jordan-park.md · <span class="field">age_band</span></div>
+          <div class="row now" style="font-style: italic; color: var(--ink-faint); font-size: 9px;">demote current → background</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">01 · Inbox</div>
+        <h4 class="card-title">Brain Inbox</h4>
+        <p class="card-blurb">A small stack of suggestions on cream paper, each with a quoted line beneath. Keep, set aside, open the card. No counters. No bulk-action toolbar. Empty state: <em>"Nothing tonight. Sleep well."</em></p>
+        <div class="card-foot">brain-inbox.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="hearth-edit-states.html">
+      <div class="thumb hearth">
+        <div class="col">
+          <div class="nm">Role</div>
+          <div class="ln"></div><div class="ln short"></div>
+          <div class="badge">2d ago · qwen</div>
+        </div>
+        <div class="col locked">
+          <div class="nm">Diff.</div>
+          <div class="ln"></div><div class="ln short"></div>
+          <div class="badge">🔒 you · 12 Apr</div>
+        </div>
+        <div class="col editing">
+          <div class="nm">Body</div>
+          <div class="ln"></div><div class="ln short"></div>
+          <div class="badge">⌘↵ save</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">02 · Edit</div>
+        <h4 class="card-title">Hearth — edit states</h4>
+        <p class="card-blurb">Read-only baseline → hover → locked (the vellum stripe) → editing. The lock isn't decoration on the field — it's metadata <em>about</em> the field, in the badge row. Hairline pencil, no chrome.</p>
+        <div class="card-foot">hearth-edit-states.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="time-travel.html">
+      <div class="thumb travel">
+        <div class="ribbon"></div>
+        <div class="here">card-time · you are here</div>
+        <div class="field">
+          <div class="nm">Body</div>
+          <div class="v">Joined the leadership team. Still feeling the room.</div>
+          <div class="now">now: the Eng counterweight on the leadership team</div>
+        </div>
+        <div class="field">
+          <div class="nm">Differentiator</div>
+          <div class="v" style="font-style: italic; color: var(--ink-faint);">(empty — not yet authored)</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">03 · History</div>
+        <h4 class="card-title">Time-travel — per-field history</h4>
+        <p class="card-blurb">The card learns what it used to be. Slider on top, in cool grey (<em>card-time</em>, distinct from the Tide's <em>meeting-time</em>). Tick marks only at meaningful commits. Revert appears only when a field differs.</p>
+        <div class="card-foot">time-travel.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- ========== Supporting surfaces ========== -->
+  <h3 class="section-h">Supporting surfaces · trust, character, edges</h3>
+
+  <div class="grid">
+
+    <a class="card" href="brain-settings.html">
+      <div class="thumb settings">
+        <div class="paper">
+          <div class="ph">## Who you are</div>
+          <div class="pm">3 lines · authored by you · locked</div>
+          <div class="ln"></div><div class="ln s"></div><div class="ln xs"></div>
+        </div>
+        <div class="paper">
+          <div class="ph">## Open commitments</div>
+          <div class="pm">3 open · auto-extracted · 4 May</div>
+          <div class="ln"></div><div class="ln s"></div><div class="ln"></div><div class="ln xs"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">04 · Trust</div>
+        <h4 class="card-title">Brain settings — persona &amp; active</h4>
+        <p class="card-blurb">"What I always know about you" + "What's on your mind this fortnight." The two files the brain loads into every assistant turn, finally visible to the user. Editable inline; power users get a vim incantation as a wink.</p>
+        <div class="card-foot">brain-settings.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="geomi-bubbles.html">
+      <div class="thumb geomi">
+        <div class="half">
+          <div class="bg-line"></div><div class="bg-line s"></div><div class="bg-line xs"></div>
+          <div class="bg-line"></div><div class="bg-line s"></div>
+          <div class="bubble">
+            <span class="dot"></span><span style="font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-faint); font-weight: 700;">Geomi · evening</span>
+            <div class="b-text">Two things didn't settle today.</div>
+            <span class="verb">Brief tomorrow →</span>
+          </div>
+        </div>
+        <div class="half">
+          <div class="bg-line"></div><div class="bg-line s"></div><div class="bg-line"></div>
+          <div class="bg-line xs"></div><div class="bg-line s"></div>
+          <div class="bubble top">
+            <span class="dot"></span><span style="font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--ink-faint); font-weight: 700;">Geomi</span>
+            <div class="b-text">Alex is referring to Mar 14.</div>
+            <span class="verb">Show the call →</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">05 · Character</div>
+        <h4 class="card-title">Geomi — end-of-day &amp; mid-meeting</h4>
+        <p class="card-blurb">No border by default. Text + breathing dot + one first-action verb. Marginalia, not chrome. The bubble points; it doesn't answer. Dismiss = silent for the rest of the stage.</p>
+        <div class="card-foot">geomi-bubbles.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+    <a class="card" href="sensitive-meeting.html">
+      <div class="thumb seal">
+        <div class="head">
+          <div class="nm">Quarterly board</div>
+          <span class="chip">Sensitive</span>
+        </div>
+        <div class="panel">
+          marked sensitive — body hidden
+          <span class="verb">Reveal for this session →</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-num">06 · Edge</div>
+        <h4 class="card-title">Sensitive meeting</h4>
+        <p class="card-blurb">Pre-meeting toggle; post-meeting masking. Hatching, vellum, paper — the page reads as deliberately covered, like a redacted briefing book. Click-through reveals for the session without unmarking.</p>
+        <div class="card-foot">sensitive-meeting.html <span class="arrow">→</span></div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- closing line -->
+  <div style="margin-top: 56px; padding: 22px 24px; background: var(--panel); border: 1px solid var(--rule-soft); border-radius: 12px;">
+    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px;">Reading order</div>
+    <p style="font-family: var(--font-serif); font-style: italic; font-size: 14.5px; color: var(--ink-soft); margin: 0; max-width: 760px; line-height: 1.6;">
+      Start with the <em>creative direction</em>. Then look at <em>brain-inbox</em> — that's the most load-bearing surface and the one I spent the most time on. <em>Hearth edit states</em> and <em>time-travel</em> are next; together they define the write-side language. Then <em>brain-settings</em> for trust, <em>geomi-bubbles</em> for character, and finally <em>sensitive-meeting</em> for the edge case. None of this is final. All of it is mine to defend.
+    </p>
+  </div>
+
+  <div class="footer">contact sheet by Rachel · v9 / mockup-index · 2026-05-04</div>
+
+</div>
+</body>
+</html>

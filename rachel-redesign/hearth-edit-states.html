@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hearth — edit states · v9 / Rachel</title>
+<style>
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --vellum:       #F0EBDC;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --ink-bg:       #B5B2AB;
+    --rule:         #E8E4D8;
+    --rule-soft:    #F0ECE0;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --c-2:  #C97A6E;
+
+    --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
+    --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --shadow-card:  0 8px 18px -10px rgba(0,0,0,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-stack);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 36px 32px 96px;
+  }
+  .page { max-width: 720px; margin: 0 auto; }
+
+  /* ========== Masthead ========== */
+  .masthead { padding-bottom: 22px; margin-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .crumb { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px; }
+  h1.title { font-family: var(--font-serif); font-size: 28px; font-weight: 500; letter-spacing: -0.012em; margin: 0 0 8px; }
+  .opening { font-family: var(--font-serif); font-style: italic; font-size: 15.5px; color: var(--ink-soft); margin: 0; max-width: 600px; }
+
+  /* state row */
+  .state {
+    margin: 0 0 38px;
+  }
+  .state-cap {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .state-cap .num {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    color: var(--brand-strong); text-transform: uppercase;
+    border: 1px solid var(--brand-soft); background: var(--brand-soft);
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .state-cap h2 {
+    font-family: var(--font-serif);
+    font-size: 18px; font-weight: 500;
+    letter-spacing: -0.005em;
+    margin: 0;
+  }
+  .state-sub {
+    color: var(--ink-faint);
+    font-size: 13px;
+    margin: 0 0 14px;
+    max-width: 600px;
+    font-family: var(--font-serif);
+    font-style: italic;
+  }
+
+  /* ========== Dossier card — base ========== */
+  .dossier {
+    background: var(--panel-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px;
+    padding: 18px 18px 14px;
+    box-shadow: var(--shadow-card);
+    width: 360px;
+    position: relative;
+  }
+  .dossier-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+  .dossier-avatar {
+    flex: 0 0 auto;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 16px; font-weight: 500;
+    border: 1px solid var(--brand-soft);
+  }
+  .dossier-id { flex: 1; min-width: 0; }
+  .dossier-name {
+    font-family: var(--font-serif);
+    font-size: 16px; font-weight: 500;
+    color: var(--ink); line-height: 1.2;
+    margin: 0 0 2px;
+  }
+  .dossier-role {
+    font-size: 11px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+  }
+  .dossier-role .accent { color: var(--brand-strong); }
+
+  /* ========== Field unit — wrapping each editable field ========== */
+  .field {
+    position: relative;
+    padding: 8px 32px 10px 10px;     /* room for hover-pencil */
+    border-radius: 6px;
+    margin: 0 -10px 4px;
+    transition: background 140ms ease;
+  }
+  .field-value {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .field-value em { font-style: italic; color: var(--ink); }
+  .field-value .ent {
+    color: var(--brand-strong);
+    font-family: var(--font-stack);
+    font-style: normal;
+    font-weight: 500;
+  }
+  .field-name {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+
+  /* hover-pencil — 11px ink-faint, no chrome */
+  .pencil {
+    position: absolute;
+    top: 9px; right: 8px;
+    width: 11px; height: 11px;
+    color: var(--ink-faint);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 140ms ease;
+  }
+
+  /* provenance row — always visible at 50%, full at hover */
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 4px;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    opacity: 0.55;
+    transition: opacity 140ms ease;
+  }
+  .badge .source { color: var(--ink-soft); }
+  .badge .model {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+  }
+  .badge .lock-glyph {
+    width: 10px; height: 10px;
+    color: var(--ink-faint);
+  }
+  .badge .author-you {
+    color: var(--brand-strong);
+    font-weight: 600;
+  }
+
+  /* (a) baseline state — show provenance always at 50% */
+  .state.baseline .field:hover .badge,
+  .state.hover .field.is-hovered .badge {
+    opacity: 1;
+  }
+  .state.hover .field.is-hovered { background: var(--panel); }
+  .state.hover .field.is-hovered .pencil { opacity: 1; }
+
+  /* (c) locked state — vellum stripe on the locked field, faint until hover */
+  .field.locked {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--vellum) 0px,
+        var(--vellum) 6px,
+        transparent 6px,
+        transparent 14px
+      );
+    background-color: rgba(240,235,220,0.30);
+  }
+  .field.locked .badge { opacity: 0.85; }
+  .field.locked .badge .lock-glyph { color: var(--ink-soft); }
+
+  /* (d) editing state — borderless inline editor */
+  .field.editing {
+    background: var(--panel);
+    border: 1px solid var(--brand-soft);
+    box-shadow: 0 0 0 4px rgba(27,191,203,0.08);
+  }
+  .field.editing .pencil { opacity: 0; }
+  .field.editing .field-value {
+    color: var(--ink);
+    outline: none;
+    border-bottom: 1px dashed var(--brand-soft);
+    padding-bottom: 4px;
+  }
+  .field.editing .editor-hint {
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--ink-faint);
+  }
+  .field.editing .editor-hint kbd {
+    font-family: var(--font-mono);
+    font-size: 10.5px; padding: 1px 5px;
+    border: 1px solid var(--rule); border-radius: 3px;
+    color: var(--ink-soft); background: var(--panel-soft);
+  }
+  .field.editing .editor-hint .save {
+    margin-left: auto;
+    color: var(--brand-strong);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* small caret in the editing field */
+  .field.editing .caret {
+    display: inline-block;
+    width: 1.5px; height: 14px;
+    background: var(--brand);
+    vertical-align: -2px; margin-left: 1px;
+    animation: caret-blink 1100ms steps(1) infinite;
+  }
+  @keyframes caret-blink {
+    0%, 50%   { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* The dossier-stat row — same as v8 */
+  .dossier-stat {
+    display: flex; align-items: center; gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+    margin-top: 6px;
+  }
+  .dossier-stat .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--brand); flex-shrink: 0; }
+  .dossier-stat .num { color: var(--ink-soft); font-weight: 600; }
+  .dossier-stat .sep { color: var(--rule); margin: 0 4px; }
+
+  /* annotations on each state */
+  .annot {
+    margin-top: 12px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    line-height: 1.55;
+    max-width: 600px;
+    border-left: 2px solid var(--rule-soft);
+    padding-left: 12px;
+  }
+  .annot strong { color: var(--ink-soft); font-weight: 600; }
+
+  /* tooltip on the badge — what hover-the-badge reveals */
+  .tooltip {
+    position: absolute;
+    left: 12px;
+    bottom: 100%;
+    margin-bottom: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.45;
+    width: 260px;
+    box-shadow: 0 8px 18px -10px rgba(0,0,0,0.30);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(2px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  .field.tooltipped .tooltip { opacity: 1; transform: translateY(0); }
+  .tooltip .span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--brand);
+  }
+  .tooltip::after {
+    content: "";
+    position: absolute;
+    left: 18px; top: 100%;
+    border: 5px solid transparent;
+    border-top-color: var(--ink);
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="crumb">Brain Memory · v9 · Rachel</div>
+    <h1 class="title">Hearth — edit states</h1>
+    <p class="opening">A single dossier card in four states: read-only baseline, one field hovered, one field locked (the vellum stripe), one field mid-edit.</p>
+  </header>
+
+  <!-- (a) baseline -->
+  <section class="state baseline">
+    <div class="state-cap">
+      <span class="num">a</span>
+      <h2>Read-only baseline</h2>
+    </div>
+    <p class="state-sub">Provenance badges sit at 50% opacity below each field. Pencil affordance is hidden until hover.</p>
+
+    <div class="dossier">
+      <div class="dossier-head">
+        <div class="dossier-avatar">AC</div>
+        <div class="dossier-id">
+          <div class="dossier-name">Alex Chen</div>
+          <div class="dossier-role">VP Eng · <span class="accent">friendly skeptic</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Role line</div>
+        <p class="field-value">VP Eng at Acme · pushes timeline back, holds line on quality.</p>
+        <svg class="pencil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 21l3.5-1 11-11-2.5-2.5-11 11L3 21z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M14 7l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <div class="badge">
+          <span class="source">auto-extracted · 2 days ago</span>
+          <span>·</span>
+          <span class="model">qwen-3-32b</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Body</div>
+        <p class="field-value">The <span class="ent">Eng counterweight</span> on the leadership team. Reframes privacy questions as portability questions; cares about data outliving the company. Heard the markdown-on-disk story this morning and lit up.</p>
+        <svg class="pencil" viewBox="0 0 24 24" fill="none"><path d="M3 21l3.5-1 11-11-2.5-2.5-11 11L3 21z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <div class="badge">
+          <span class="source">auto-extracted · 4 days ago</span>
+          <span>·</span>
+          <span class="model">qwen-3-32b</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Differentiator</div>
+        <p class="field-value">the Eng counterweight on the leadership team.</p>
+        <svg class="pencil" viewBox="0 0 24 24" fill="none"><path d="M3 21l3.5-1 11-11-2.5-2.5-11 11L3 21z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <div class="badge">
+          <span class="author-you">you edited</span>
+          <span>·</span>
+          <span class="source">12 Apr</span>
+        </div>
+      </div>
+
+      <div class="dossier-stat">
+        <span class="dot"></span>
+        <span><span class="num">12 meetings</span> <span class="sep">·</span> last seen today, 9:17 am</span>
+      </div>
+    </div>
+
+    <p class="annot"><strong>Note.</strong> Every field carries its own provenance row. The badges are present at 50% opacity in the resting state — they are part of the surface, not a discoverable detail. Click-to-edit is the *primary* affordance; the pencil glyph is the *redundant* one.</p>
+  </section>
+
+  <!-- (b) one field hovered with edit affordance + tooltip -->
+  <section class="state hover">
+    <div class="state-cap">
+      <span class="num">b</span>
+      <h2>Hovered — pencil revealed, badge full opacity, source preview</h2>
+    </div>
+    <p class="state-sub">The cursor is over the role line. The pencil fades in, the badge brightens, and the tooltip exposes the source meeting + span span the auto-extractor pulled from.</p>
+
+    <div class="dossier">
+      <div class="dossier-head">
+        <div class="dossier-avatar">AC</div>
+        <div class="dossier-id">
+          <div class="dossier-name">Alex Chen</div>
+          <div class="dossier-role">VP Eng · <span class="accent">friendly skeptic</span></div>
+        </div>
+      </div>
+
+      <div class="field is-hovered tooltipped">
+        <div class="tooltip">
+          From <strong>q3-pricing</strong> · <span class="span">12:34 → 13:02</span><br>
+          <em>"I'll hold the line on quality, but the timeline can move if we have data."</em>
+        </div>
+        <div class="field-name">Role line</div>
+        <p class="field-value">VP Eng at Acme · pushes timeline back, holds line on quality.</p>
+        <svg class="pencil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 21l3.5-1 11-11-2.5-2.5-11 11L3 21z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M14 7l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <div class="badge">
+          <span class="source">auto-extracted · 2 days ago</span>
+          <span>·</span>
+          <span class="model">qwen-3-32b</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Body</div>
+        <p class="field-value">The <span class="ent">Eng counterweight</span> on the leadership team. Reframes privacy questions as portability questions; cares about data outliving the company.</p>
+        <div class="badge"><span class="source">auto-extracted · 4 days ago</span><span>·</span><span class="model">qwen-3-32b</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Differentiator</div>
+        <p class="field-value">the Eng counterweight on the leadership team.</p>
+        <div class="badge"><span class="author-you">you edited</span><span>·</span><span class="source">12 Apr</span></div>
+      </div>
+
+      <div class="dossier-stat">
+        <span class="dot"></span>
+        <span><span class="num">12 meetings</span> <span class="sep">·</span> last seen today, 9:17 am</span>
+      </div>
+    </div>
+
+    <p class="annot"><strong>Note.</strong> The tooltip reveals the citation, not a "click to edit" instruction. The pencil glyph is the only chrome added on hover — at 11px, it sits inside the field's right padding. Restraint: nothing else on the card moves.</p>
+  </section>
+
+  <!-- (c) locked -->
+  <section class="state locked">
+    <div class="state-cap">
+      <span class="num">c</span>
+      <h2>Locked — vellum stripe, immutable to auto-consolidation</h2>
+    </div>
+    <p class="state-sub">The differentiator field is <code>human_locked: true</code>. The auto-extractor cannot rewrite it; rewrites accumulate as proposed updates instead. The lock isn't decoration on the field — it's metadata <em>about</em> the field, and lives in the badge row.</p>
+
+    <div class="dossier">
+      <div class="dossier-head">
+        <div class="dossier-avatar">AC</div>
+        <div class="dossier-id">
+          <div class="dossier-name">Alex Chen</div>
+          <div class="dossier-role">VP Eng · <span class="accent">friendly skeptic</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Role line</div>
+        <p class="field-value">VP Eng at Acme · pushes timeline back, holds line on quality.</p>
+        <div class="badge"><span class="source">auto-extracted · 2 days ago</span><span>·</span><span class="model">qwen-3-32b</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Body</div>
+        <p class="field-value">The <span class="ent">Eng counterweight</span> on the leadership team.</p>
+        <div class="badge"><span class="source">auto-extracted · 4 days ago</span><span>·</span><span class="model">qwen-3-32b</span></div>
+      </div>
+
+      <div class="field locked">
+        <div class="field-name">Differentiator</div>
+        <p class="field-value">the Eng counterweight on the leadership team.</p>
+        <div class="badge">
+          <svg class="lock-glyph" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span class="author-you">you edited</span>
+          <span>·</span>
+          <span class="source">12 Apr · locked</span>
+        </div>
+      </div>
+
+      <div class="dossier-stat">
+        <span class="dot"></span>
+        <span><span class="num">12 meetings</span> <span class="sep">·</span> last seen today, 9:17 am</span>
+      </div>
+    </div>
+
+    <p class="annot"><strong>The vellum lock.</strong> Diagonal cream-on-cream stripes, barely visible until the user looks for them. No yellow highlight. No padlock badge on the field itself. The hairline padlock glyph appears in the badge row, where metadata lives. This says "the user signed this off; it persists" without ever shouting.</p>
+  </section>
+
+  <!-- (d) editing -->
+  <section class="state editing">
+    <div class="state-cap">
+      <span class="num">d</span>
+      <h2>Editing — borderless inline editor open</h2>
+    </div>
+    <p class="state-sub">Click the field. The text becomes contenteditable in the same typography it had a moment ago. No modal, no separate panel, no markdown editor. <kbd>Esc</kbd> aborts; <kbd>⌘↵</kbd> saves and locks the field.</p>
+
+    <div class="dossier">
+      <div class="dossier-head">
+        <div class="dossier-avatar">AC</div>
+        <div class="dossier-id">
+          <div class="dossier-name">Alex Chen</div>
+          <div class="dossier-role">VP Eng · <span class="accent">friendly skeptic</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Role line</div>
+        <p class="field-value">VP Eng at Acme · pushes timeline back, holds line on quality.</p>
+        <div class="badge"><span class="source">auto-extracted · 2 days ago</span><span>·</span><span class="model">qwen-3-32b</span></div>
+      </div>
+
+      <div class="field editing">
+        <div class="field-name">Body</div>
+        <p class="field-value" contenteditable="true" spellcheck="false">The <span class="ent">Eng counterweight</span> on the leadership team. Reframes privacy as portability — wants his data to outlive the company<span class="caret"></span></p>
+        <div class="editor-hint">
+          <kbd>Esc</kbd><span>cancel</span>
+          <kbd>⌘↵</kbd><span>save &amp; lock</span>
+          <span class="save">about to save · field will lock</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-name">Differentiator</div>
+        <p class="field-value">the Eng counterweight on the leadership team.</p>
+        <div class="badge">
+          <svg class="lock-glyph" viewBox="0 0 24 24" fill="none"><rect x="6" y="11" width="12" height="9" rx="1.6" stroke="currentColor" stroke-width="1.6"/><path d="M9 11V8a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="author-you">you edited</span><span>·</span><span class="source">12 Apr · locked</span>
+        </div>
+      </div>
+
+      <div class="dossier-stat">
+        <span class="dot"></span>
+        <span><span class="num">12 meetings</span> <span class="sep">·</span> last seen today, 9:17 am</span>
+      </div>
+    </div>
+
+    <p class="annot"><strong>The save commits.</strong> On <kbd>⌘↵</kbd> the field locks (vellum develops in 320ms), the badge updates to <em>"you edited · just now · locked,"</em> and the underlying git commit is written by the user's identity. Auto-consolidation will route future rewrites of this field to the Brain Inbox until the user accepts a change that unlocks it.</p>
+  </section>
+
+  <div class="footer">mockup by Rachel · v9 / hearth-edit-states · 2026-05-04</div>
+
+</div>
+</body>
+</html>

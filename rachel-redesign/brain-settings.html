@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Brain settings — v9 / Rachel</title>
+<style>
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --vellum:       #F0EBDC;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E8E4D8;
+    --rule-soft:    #F0ECE0;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
+    --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --shadow-card:  0 8px 18px -10px rgba(0,0,0,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-stack);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 36px 32px 96px;
+  }
+  .page { max-width: 880px; margin: 0 auto; }
+
+  .masthead { padding-bottom: 22px; margin-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .crumb { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px; }
+  h1.title { font-family: var(--font-serif); font-size: 30px; font-weight: 500; letter-spacing: -0.012em; margin: 0 0 8px; }
+  .opening { font-family: var(--font-serif); font-style: italic; font-size: 15.5px; color: var(--ink-soft); margin: 0; max-width: 600px; }
+
+  /* ========== Section ========== */
+  .section {
+    margin-bottom: 44px;
+  }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 4px;
+  }
+  .section-head h2 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    margin: 0;
+  }
+  .section-head .meta {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+  .section-head .meta .num { color: var(--ink-soft); font-weight: 600; }
+  .section-sub {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14.5px;
+    color: var(--ink-faint);
+    margin: 4px 0 18px;
+    letter-spacing: -0.003em;
+    max-width: 600px;
+  }
+
+  /* ========== Editor card — feels like a piece of paper ========== */
+  .paper {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .paper-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    background: var(--panel-soft);
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .paper-toolbar .toolbar-path {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .paper-toolbar .toolbar-path .dim { color: var(--ink-faint); }
+  .paper-toolbar .updated {
+    margin-left: auto;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+  }
+  .paper-toolbar .updated .when { color: var(--ink-soft); font-weight: 500; }
+
+  .paper-body {
+    padding: 24px 28px 28px;
+  }
+
+  /* the persona / active markdown preview */
+  .md-section {
+    margin: 0 0 22px;
+    padding: 0;
+  }
+  .md-section:last-child { margin-bottom: 4px; }
+
+  .md-h {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    margin: 0 0 8px;
+  }
+  .md-h::before {
+    content: "## ";
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    margin-right: 4px;
+  }
+  .md-p {
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+    letter-spacing: -0.002em;
+  }
+  .md-p em { color: var(--ink); font-style: italic; }
+  .md-p .ent {
+    color: var(--brand-strong);
+    font-family: var(--font-stack);
+    font-style: normal;
+    font-weight: 500;
+  }
+  .md-list {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+  }
+  .md-list li {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    padding: 2px 0 2px 18px;
+    position: relative;
+  }
+  .md-list li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+  }
+  .md-list li em { color: var(--ink); font-style: italic; }
+  .md-list li .ent {
+    color: var(--brand-strong);
+    font-family: var(--font-stack);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* per-section meta line */
+  .md-meta {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* ========== Footer of the paper — power-user line, monospace ========== */
+  .paper-footer {
+    padding: 14px 28px 18px;
+    border-top: 1px solid var(--rule-soft);
+    background: var(--panel-soft);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: var(--font-stack);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .paper-footer .verb {
+    color: var(--brand-strong);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--brand-soft);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .paper-footer .verb:hover { border-bottom-color: var(--brand-strong); }
+  .paper-footer code {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    background: rgba(0,0,0,0.025);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .paper-footer .spacer { flex: 1; }
+  .paper-footer .cap-line {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+
+  /* ========== Cap meter — the token cap on active.md ========== */
+  .cap-meter {
+    margin-top: 14px;
+    padding: 14px 16px 12px;
+    background: var(--panel-soft);
+    border: 1px solid var(--rule-soft);
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .cap-meter .cap-num {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .cap-meter .cap-num .of {
+    color: var(--ink-faint);
+    font-size: 12px;
+    margin-left: 2px;
+  }
+  .cap-meter .cap-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--rule-soft);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .cap-meter .cap-bar::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 68%;
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-strong) 100%);
+    border-radius: 3px;
+  }
+  .cap-meter .cap-label {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .cap-meter .cap-label strong { color: var(--ink); font-weight: 600; }
+
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="crumb">Brain Memory · v9 · Rachel · Settings</div>
+    <h1 class="title">What I always know about you</h1>
+    <p class="opening">The two files the brain loads into every assistant turn. They're not configuration — they're context. Both are markdown on disk; the brain reads them, you can read them, you can edit them.</p>
+  </header>
+
+  <!-- ========== persona.md — the always-loaded profile ========== -->
+  <section class="section">
+    <div class="section-head">
+      <h2>What I always know about you</h2>
+      <span class="meta"><span class="num">128</span> lines · last edited by you, <span class="num">22 Apr</span></span>
+    </div>
+    <p class="section-sub">Long-lived facts about who you are and how you think. Edited rarely, on purpose. The brain treats this as ground truth and won't rewrite it without your blessing.</p>
+
+    <div class="paper">
+      <div class="paper-toolbar">
+        <span class="toolbar-path"><span class="dim">~/Docknote/brain/</span>persona.md</span>
+        <span class="updated">last edited by <span class="when">you, 22 Apr · 9:15 am</span></span>
+      </div>
+
+      <div class="paper-body">
+
+        <div class="md-section">
+          <h3 class="md-h">Who you are</h3>
+          <p class="md-p">
+            <span class="ent">Sean Song</span>, builder. Founder of <span class="ent">Docknote</span>.
+            Background in firmware bring-up — that's where the <em>"verification before done"</em> instinct comes from.
+            You think in <em>plans before execute</em>, and you write devlogs.
+          </p>
+          <p class="md-meta">3 lines · authored by you · locked</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">How you work</h3>
+          <ul class="md-list">
+            <li>Small commits, frequent pushes. <em>Minimal-impact changes</em> unless explicitly planned.</li>
+            <li>Sub-agents do the research; main context stays clean.</li>
+            <li>Every sub-job declares its verification check up front.</li>
+            <li>End-of-session disk hygiene — no <code>__pycache__</code>, no stray model caches.</li>
+          </ul>
+          <p class="md-meta">4 lines · authored by you · locked</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">What you care about</h3>
+          <p class="md-p">
+            Privacy as engineering, not promise. <em>Markdown on disk, git audit, Tailscale-only-remote.</em>
+            <span class="ent">Granola</span> encrypted their database and locked users out — you took the
+            opposite call deliberately.
+          </p>
+          <p class="md-p">
+            Mature, technical-but-warm audience. Not whimsy. Not enterprise sterility.
+            The tool helps the user remember the people they care about and the things they decided.
+          </p>
+          <p class="md-meta">2 paragraphs · authored by you · locked</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">Calibration</h3>
+          <ul class="md-list">
+            <li>Speak directly. Don't pad.</li>
+            <li>If the brain doesn't know, say so. Don't guess.</li>
+            <li>Cite the meeting. Always.</li>
+          </ul>
+          <p class="md-meta">3 lines · authored by you · locked</p>
+        </div>
+
+      </div>
+
+      <div class="paper-footer">
+        <span>Edit inline by clicking any section ·</span>
+        <a class="verb">Open the file</a>
+        <span>or</span>
+        <code>vim ~/Docknote/brain/persona.md</code>
+        <span class="spacer"></span>
+        <span class="cap-line">≈ 1,840 tokens</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== active.md — the rolling fortnight ========== -->
+  <section class="section">
+    <div class="section-head">
+      <h2>What's on your mind this fortnight</h2>
+      <span class="meta">rolling 14 days · auto-rotated each night</span>
+    </div>
+    <p class="section-sub">A rolling digest of recent decisions, open questions, and the people active in your week. Auto-generated by the consolidator and trimmed to fit the prompt budget. Editable, but the brain will rewrite over edits unless you lock a line.</p>
+
+    <div class="paper">
+      <div class="paper-toolbar">
+        <span class="toolbar-path"><span class="dim">~/Docknote/brain/</span>active.md</span>
+        <span class="updated">last rewrite by <span class="when">auto-consolidator · 03:14 today</span></span>
+      </div>
+
+      <div class="paper-body">
+
+        <div class="md-section">
+          <h3 class="md-h">Open commitments</h3>
+          <ul class="md-list">
+            <li><span class="ent">Mira</span> · per-tenant keys without a HSM in v1 — due Mon (from <em>SnapGPU sketch · 30 Apr</em>).</li>
+            <li><span class="ent">Daniel</span> wants a SnapGPU one-pager pass for legal claims before publish (from <em>Privacy review · 30 Apr</em>).</li>
+            <li><span class="ent">Alex</span> · monthly billing experiment with the first ten advisors, three-month window (from <em>Q3 pricing · 4 May</em>).</li>
+          </ul>
+          <p class="md-meta">3 open · auto-extracted · 4 May</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">Decisions this fortnight</h3>
+          <ul class="md-list">
+            <li><em>"Local-first"</em> stays on the homepage. Asterisk cut. SnapGPU page gets its own enclave page.</li>
+            <li>Wave-16 copy: <em>"Ask any meeting"</em> over <em>"Search."</em> Alex pushed for it.</li>
+          </ul>
+          <p class="md-meta">2 decisions · auto-extracted</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">People in rotation</h3>
+          <p class="md-p">
+            <span class="ent">Alex</span> (4 meetings) · <span class="ent">Mira</span> (3) ·
+            <span class="ent">Daniel</span> (1) · <span class="ent">Pat</span> (2) ·
+            <span class="ent">Priya</span> (1, new this week).
+          </p>
+          <p class="md-meta">5 people · auto-counted</p>
+        </div>
+
+        <div class="md-section">
+          <h3 class="md-h">Themes warming</h3>
+          <ul class="md-list">
+            <li><em>"Portability over confidentiality"</em> — 4 mentions across 6 weeks (proposed in Brain Inbox).</li>
+            <li><em>"Asterisks kill claims"</em> — Daniel's framing, twice this fortnight.</li>
+          </ul>
+          <p class="md-meta">2 patterns · auto-clustered</p>
+        </div>
+
+      </div>
+
+      <!-- Cap meter -->
+      <div style="padding: 0 28px 18px;">
+        <div class="cap-meter">
+          <div class="cap-num">2,720<span class="of"> / 4,000 tokens</span></div>
+          <div class="cap-bar"></div>
+          <div class="cap-label"><strong>68% of the prompt budget.</strong> Well within cap. Older entries rotate out automatically.</div>
+        </div>
+      </div>
+
+      <div class="paper-footer">
+        <span>Lock any line by clicking it ·</span>
+        <a class="verb">Open the file</a>
+        <span>or</span>
+        <code>vim ~/Docknote/brain/active.md</code>
+        <span class="spacer"></span>
+        <span class="cap-line">rolling · trimmed nightly</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">mockup by Rachel · v9 / brain-settings · 2026-05-04</div>
+
+</div>
+</body>
+</html>

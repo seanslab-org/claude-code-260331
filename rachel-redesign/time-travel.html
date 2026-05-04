@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Time-travel — v9 / Rachel</title>
+<style>
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --vellum:       #F0EBDC;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E8E4D8;
+    --rule-soft:    #F0ECE0;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --past:         #8E9EAE;        /* the cool grey for card-time */
+    --past-soft:    #DCE0E5;
+
+    --strike:       #C97A6E;
+    --add:          #5B9292;
+
+    --font-stack:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --font-serif:  "Iowan Old Style", "Charter", "Georgia", ui-serif, serif;
+    --font-mono:   ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --shadow-card:  0 8px 18px -10px rgba(0,0,0,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-stack);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 36px 32px 96px;
+  }
+  .page { max-width: 920px; margin: 0 auto; }
+
+  .masthead { padding-bottom: 22px; margin-bottom: 36px; border-bottom: 1px solid var(--rule); }
+  .crumb { font-size: 10px; text-transform: uppercase; letter-spacing: 0.10em; color: var(--brand-strong); font-weight: 700; margin-bottom: 6px; }
+  h1.title { font-family: var(--font-serif); font-size: 28px; font-weight: 500; letter-spacing: -0.012em; margin: 0 0 8px; }
+  .opening { font-family: var(--font-serif); font-style: italic; font-size: 15.5px; color: var(--ink-soft); margin: 0; max-width: 600px; }
+
+  /* Two-column layout: card on left, history drawer on right */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ========== Card-time ribbon — sits ABOVE the card, in cool grey ========== */
+  .card-time {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    padding: 14px 16px 12px;
+    position: relative;
+  }
+  .card-time .label-row {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .card-time .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--past);
+  }
+  .card-time .at {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    font-style: italic;
+    letter-spacing: -0.003em;
+  }
+  .card-time .at .when {
+    color: var(--past);
+    font-style: normal;
+    font-weight: 600;
+    font-family: var(--font-stack);
+    margin-right: 6px;
+  }
+  .card-time .return {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--brand-strong);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--brand-soft);
+    cursor: pointer;
+  }
+  .card-time .return:hover { border-bottom-color: var(--brand-strong); }
+
+  /* the slider track */
+  .slider {
+    position: relative;
+    height: 38px;
+    margin: 0 4px;
+  }
+  .slider .track {
+    position: absolute;
+    left: 0; right: 0; top: 18px; height: 2px;
+    background: var(--past-soft);
+    border-radius: 1px;
+  }
+  .slider .filled {
+    position: absolute;
+    left: 0; top: 18px; height: 2px;
+    background: var(--past);
+    border-radius: 1px;
+    /* dragged to "Feb 14" — about 24% along */
+    width: 24%;
+    opacity: 0.55;
+  }
+  .slider .tick {
+    position: absolute; top: 12px;
+    width: 1.5px; height: 14px;
+    background: var(--past-soft);
+    border-radius: 1px;
+    transform: translateX(-50%);
+  }
+  .slider .tick.commit {
+    background: var(--past);
+    height: 16px;
+    top: 11px;
+  }
+  .slider .tick-label {
+    position: absolute;
+    top: 30px;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .slider .tick-label.now { color: var(--past); font-weight: 600; }
+
+  /* the dragged thumb — at 24% */
+  .slider .thumb {
+    position: absolute;
+    top: 11px;
+    left: 24%;
+    transform: translateX(-50%);
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--past);
+    box-shadow: 0 0 0 4px rgba(142,158,174,0.18);
+    z-index: 2;
+  }
+  .slider .thumb-trail {
+    position: absolute;
+    top: 18px; left: 24%;
+    width: 6px; height: 2px;
+    background: rgba(142,158,174,0.30);
+    border-radius: 1px;
+    transform: translateX(-100%);
+  }
+  /* the "you are here" label above the thumb */
+  .slider .here {
+    position: absolute;
+    top: -4px; left: 24%;
+    transform: translateX(-50%);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--past);
+    white-space: nowrap;
+  }
+  .slider .here::after {
+    content: "";
+    display: block;
+    margin: 2px auto 0;
+    width: 1px; height: 6px;
+    background: var(--past-soft);
+  }
+
+  /* ========== Dossier card — joined to the ribbon above ========== */
+  .dossier {
+    background: var(--panel-soft);
+    border: 1px solid var(--rule-soft);
+    border-top: 1px solid var(--past-soft);
+    border-radius: 0 0 12px 12px;
+    padding: 18px 18px 14px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+  }
+  .dossier::before {
+    content: "";
+    position: absolute;
+    left: 18px; right: 18px; top: -1px;
+    height: 1px;
+    background: var(--past-soft);
+  }
+  .dossier-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+  .dossier-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--past-soft);
+    color: var(--past);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 16px; font-weight: 500;
+    border: 1px solid var(--past-soft);
+  }
+  .dossier-name {
+    font-family: var(--font-serif);
+    font-size: 16px; font-weight: 500;
+    color: var(--ink); line-height: 1.2;
+    margin: 0 0 2px;
+  }
+  .dossier-role {
+    font-size: 11px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+  }
+  .dossier-role .accent { color: var(--past); }
+
+  /* fields with diff highlighting */
+  .field {
+    padding: 8px 10px 10px;
+    border-radius: 6px;
+    margin: 0 -10px 4px;
+  }
+  .field-name {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .field-value {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .field-value em { font-style: italic; color: var(--ink); }
+  .field-value .ent {
+    color: var(--brand-strong);
+    font-family: var(--font-stack);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* fields that differ from current — diff highlight */
+  .field.differs {
+    background: rgba(142,158,174,0.06);
+    border-left: 2px solid var(--past);
+  }
+  .field.differs .field-value {
+    color: var(--ink);
+  }
+  .field.differs .now-line {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dotted var(--rule);
+    font-family: var(--font-serif);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  .field.differs .now-line .lbl {
+    font-family: var(--font-stack);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--past);
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  .field.differs .now-line .text {
+    text-decoration: line-through;
+    text-decoration-color: var(--past-soft);
+    color: var(--ink-faint);
+  }
+  .field.differs .revert-affordance {
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field.differs .revert-btn {
+    appearance: none;
+    border: 1px solid var(--past-soft);
+    background: var(--panel);
+    color: var(--past);
+    font-family: var(--font-stack);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.005em;
+  }
+  .field.differs .revert-btn:hover {
+    background: var(--past);
+    color: var(--panel);
+    border-color: var(--past);
+  }
+  .field.differs .revert-note {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .dossier-stat {
+    display: flex; align-items: center; gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 6px;
+  }
+  .dossier-stat .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--past); flex-shrink: 0; }
+  .dossier-stat .num { color: var(--ink-soft); font-weight: 600; }
+  .dossier-stat .sep { color: var(--rule); margin: 0 4px; }
+
+  /* ========== History drawer — 5-deep visible, "show full history" -> expand ========== */
+  .drawer {
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 12px;
+    padding: 14px 14px 10px;
+    position: sticky;
+    top: 22px;
+  }
+  .drawer-cap {
+    font-family: var(--font-serif);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    letter-spacing: -0.005em;
+  }
+  .commit {
+    position: relative;
+    padding: 8px 0 8px 18px;
+    border-bottom: 1px dotted var(--rule-soft);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .commit:last-of-type { border-bottom: none; }
+  .commit::before {
+    content: "";
+    position: absolute;
+    left: 4px; top: 14px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--past-soft);
+  }
+  .commit::after {
+    content: "";
+    position: absolute;
+    left: 6.5px; top: 20px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--past-soft);
+  }
+  .commit:last-of-type::after { display: none; }
+  .commit.is-here::before {
+    background: var(--past);
+    box-shadow: 0 0 0 3px rgba(142,158,174,0.20);
+  }
+  .commit.is-current::before {
+    background: var(--brand);
+  }
+  .commit .when {
+    font-family: var(--font-stack);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .commit.is-here .when { color: var(--past); }
+  .commit.is-current .when { color: var(--brand-strong); }
+  .commit .what {
+    font-family: var(--font-serif);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    letter-spacing: -0.002em;
+  }
+  .commit .what em { color: var(--ink); }
+  .commit .author {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+  }
+
+  .show-all {
+    display: block;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-soft);
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .show-all:hover { color: var(--brand-strong); }
+
+  .annot {
+    margin-top: 16px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    line-height: 1.55;
+    border-left: 2px solid var(--rule-soft);
+    padding-left: 12px;
+    max-width: 600px;
+  }
+  .annot strong { color: var(--ink-soft); font-weight: 600; }
+
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="crumb">Brain Memory · v9 · Rachel</div>
+    <h1 class="title">Time-travel</h1>
+    <p class="opening">The card learns what it used to be. The user drags a slider; the fields rewind in place. The Tide ribbon (meeting-time) recedes; this is <em>card-time</em>, in cooler grey.</p>
+  </header>
+
+  <div class="layout">
+
+    <div>
+      <!-- card-time ribbon — sits above the card -->
+      <section class="card-time">
+        <div class="label-row">
+          <span class="label">Card-time</span>
+          <span class="at"><span class="when">14 Feb 2026</span><em>three months ago — before the leadership offsite</em></span>
+          <a class="return">↺ Return to now</a>
+        </div>
+        <div class="slider" role="slider" aria-label="Card history">
+          <div class="track"></div>
+          <div class="filled"></div>
+
+          <!-- ticks at meaningful commits only -->
+          <div class="tick commit" style="left: 8%"></div>
+          <div class="tick-label" style="left: 8%">Jan 28</div>
+
+          <div class="tick commit" style="left: 24%"></div>
+          <!-- the dragged-to position; label suppressed since we have "here" -->
+
+          <div class="tick commit" style="left: 42%"></div>
+          <div class="tick-label" style="left: 42%">Mar 28</div>
+
+          <div class="tick commit" style="left: 58%"></div>
+          <div class="tick-label" style="left: 58%">Apr 12</div>
+
+          <div class="tick commit" style="left: 76%"></div>
+          <div class="tick-label" style="left: 76%">Apr 29</div>
+
+          <div class="tick commit" style="left: 96%"></div>
+          <div class="tick-label now" style="left: 96%">today</div>
+
+          <span class="here">you are here</span>
+          <span class="thumb-trail"></span>
+          <span class="thumb"></span>
+        </div>
+      </section>
+
+      <!-- the card, rendered AT 14 Feb -->
+      <section class="dossier">
+        <div class="dossier-head">
+          <div class="dossier-avatar">AC</div>
+          <div>
+            <div class="dossier-name">Alex Chen</div>
+            <div class="dossier-role">Eng lead · <span class="accent">careful</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-name">Role line</div>
+          <p class="field-value">Eng lead at Acme · careful with timelines.</p>
+        </div>
+
+        <div class="field differs">
+          <div class="field-name">Body</div>
+          <p class="field-value">Joined the leadership team in January. Still feeling the room out — hasn't pushed back on anything yet.</p>
+          <div class="now-line">
+            <span class="lbl">now</span>
+            <span class="text">The <em>Eng counterweight</em> on the leadership team. Reframes privacy questions as portability questions.</span>
+          </div>
+          <div class="revert-affordance">
+            <button class="revert-btn">↺ Revert this field to Feb 14</button>
+            <span class="revert-note">writes a new commit; current value preserved in history.</span>
+          </div>
+        </div>
+
+        <div class="field differs">
+          <div class="field-name">Differentiator</div>
+          <p class="field-value"><em>(empty — not yet authored)</em></p>
+          <div class="now-line">
+            <span class="lbl">now</span>
+            <span class="text">the Eng counterweight on the leadership team.</span>
+          </div>
+          <div class="revert-affordance">
+            <button class="revert-btn">↺ Clear this field</button>
+            <span class="revert-note">field was empty on Feb 14.</span>
+          </div>
+        </div>
+
+        <div class="dossier-stat">
+          <span class="dot"></span>
+          <span><span class="num">3 meetings</span> <span class="sep">·</span> last seen 12 Feb</span>
+        </div>
+      </section>
+
+      <p class="annot"><strong>Two timelines, one canvas.</strong> The Tide ribbon (left of the Brain scene) is <em>meeting-time</em>; this slider is <em>card-time</em>. Card-time uses a cool grey palette so the user never confuses the two surfaces. The slider sits <em>above</em> the card because the timeline is the <em>condition</em> of the card's content, not a control adjacent to it. Tick marks appear only where this card's frontmatter actually changed — they are the chapter marks of its life.</p>
+    </div>
+
+    <!-- history drawer -->
+    <aside class="drawer">
+      <div class="drawer-cap">History · 5 commits visible</div>
+
+      <div class="commit is-current">
+        <div class="when">Today · 9:17 am</div>
+        <div class="what"><em>role_line</em> rewritten — auto-extractor</div>
+        <div class="author">auto-consolidator · q3-pricing</div>
+      </div>
+
+      <div class="commit">
+        <div class="when">29 Apr · 4:48 pm</div>
+        <div class="what"><em>body</em> rewritten — leadership offsite</div>
+        <div class="author">auto-consolidator · leadership-offsite</div>
+      </div>
+
+      <div class="commit">
+        <div class="when">12 Apr · 9:15 am</div>
+        <div class="what"><em>differentiator</em> authored — locked</div>
+        <div class="author">you</div>
+      </div>
+
+      <div class="commit">
+        <div class="when">28 Mar · 3:02 pm</div>
+        <div class="what"><em>role_line</em> opened</div>
+        <div class="author">auto-extractor · 1:1 alex</div>
+      </div>
+
+      <div class="commit is-here">
+        <div class="when">14 Feb · 11:08 am</div>
+        <div class="what">first appearance — Wave-15 deck</div>
+        <div class="author">auto-extractor · wave-15-deck</div>
+      </div>
+
+      <a class="show-all">Show full history (8 more)</a>
+    </aside>
+
+  </div>
+
+  <div class="footer">mockup by Rachel · v9 / time-travel · 2026-05-04</div>
+
+</div>
+</body>
+</html>
