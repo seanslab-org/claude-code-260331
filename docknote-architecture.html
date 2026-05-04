@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Docknote — current architecture (as-built · 2026-05-05)</title>
+<style>
+  :root {
+    --bg: #F7F5EF;
+    --panel: #FFFFFF;
+    --rule: #E5E1D6;
+    --rule-soft: #EDE9DD;
+    --ink: #2A2825;
+    --ink-soft: #6E695F;
+    --brand: #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft: #E0F2F4;
+    --shadow: 0 18px 40px -16px rgba(0,0,0,0.18), 0 4px 12px -4px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 40px 96px;
+  }
+  header.doc-header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+  }
+  header.doc-header h1 {
+    font-family: "Iowan Old Style", "Charter", Georgia, serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  header.doc-header .meta {
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  header.doc-header .meta strong { color: var(--ink); font-weight: 600; }
+  h2 {
+    font-family: "Iowan Old Style", "Charter", Georgia, serif;
+    font-weight: 600;
+    font-size: 22px;
+    margin: 48px 0 14px;
+    letter-spacing: -0.005em;
+  }
+  h2 .num {
+    color: var(--brand-strong);
+    font-variant-numeric: tabular-nums;
+    margin-right: 10px;
+  }
+  h3 { font-size: 16px; margin: 22px 0 6px; }
+  p { margin: 8px 0 12px; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    background: var(--rule-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  pre code { background: transparent; padding: 0; }
+  a { color: var(--brand-strong); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin: 14px 0 22px;
+    box-shadow: var(--shadow);
+  }
+  .panel.tight { padding: 14px 18px; }
+  .panel.diagram { padding: 18px 12px 4px; overflow-x: auto; }
+  .panel.diagram .mermaid { display: flex; justify-content: center; min-width: 760px; }
+
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px; }
+  .pill {
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--panel);
+  }
+  .pill.brand { background: var(--brand-soft); color: var(--brand-strong); border-color: #BFE5E9; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 8px 0 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  th {
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-bottom-color: var(--rule);
+    background: #FBFAF5;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .callout {
+    border-left: 3px solid var(--brand);
+    background: var(--brand-soft);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0 18px;
+    font-size: 14px;
+  }
+  .callout strong { color: var(--brand-strong); }
+
+  .toc {
+    columns: 2;
+    column-gap: 32px;
+    font-size: 13.5px;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+  }
+  .toc li { margin: 3px 0; break-inside: avoid; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft);
+    font-size: 12.5px;
+  }
+
+  /* Mermaid theme tuning to match warm-paper palette */
+  .mermaid svg { background: transparent !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-header">
+  <h1>Docknote — current architecture</h1>
+  <div class="meta">
+    As-built snapshot · <strong>2026-05-05</strong> · drawn from <code>~/seanslab/Docknote/app/</code> source.
+    Companion file: <code>docknote-architecture.md</code>.
+  </div>
+  <div class="pill-row" style="margin-top: 12px">
+    <span class="pill brand">Phases 1 + 2 shipped</span>
+    <span class="pill">Phase 3 (Memory) in design</span>
+    <span class="pill">macOS · Tauri · React · Rust · Python</span>
+  </div>
+</header>
+
+<div class="panel tight">
+  <strong>Contents</strong>
+  <ol class="toc">
+    <li><a href="#s1">Summary</a></li>
+    <li><a href="#s2">Layered components</a></li>
+    <li><a href="#s3">Runtime topology</a></li>
+    <li><a href="#s4">Import & process</a></li>
+    <li><a href="#s5">Ask-AI</a></li>
+    <li><a href="#s6">Storage layout</a></li>
+    <li><a href="#s7">Tauri command surface</a></li>
+    <li><a href="#s8">Python pipeline surface</a></li>
+    <li><a href="#s9">External integrations</a></li>
+    <li><a href="#s10">v3 doc vs. code</a></li>
+    <li><a href="#s11">Where Memory plugs in</a></li>
+  </ol>
+</div>
+
+<h2 id="s1"><span class="num">1.</span>One-paragraph summary</h2>
+<div class="panel">
+  <p>
+    Docknote is a <strong>macOS Tauri app</strong> (React + Vite + TypeScript front-end; Rust backend; Python pipeline workers) that turns meeting audio into a flat, plain-text <code>~/Docknote/meetings/&lt;id&gt;/</code> corpus. Capture happens on a paired <strong>HiDock</strong> hardware device or via local file import; ASR + diarization run <strong>locally</strong> (Whisper.cpp / SenseVoice / Parakeet / Qwen3-ASR + pyannote-on-CoreML); summarisation, indexing, and Q&amp;A run on <strong>SnapGPU</strong> (a private vLLM service on Sean&rsquo;s GB10 sparks reachable over Tailscale) with <strong>OpenAI as cloud fallback</strong>. Every meeting is its own folder of markdown files; there is no relational database for content. The React UI is six views (Notes / Whispers / Todos / Memory / HiDock / Settings) gated by a one-time onboarding wizard.
+  </p>
+</div>
+
+<h2 id="s2"><span class="num">2.</span>Layered component diagram</h2>
+<div class="panel diagram">
+<div class="mermaid">
+flowchart TB
+    subgraph UI["UI shell — React + Vite + TS (app/src/)"]
+        direction TB
+        APP["App.tsx · gate + view router"]
+        SIDEBAR["Sidebar · 6 nav items"]
+        SNAPCARD["SnapGpuPanel · live status"]
+        TOAST["ToastStack"]
+        MODAL["MeetingModal (+ subviews)"]
+        CHAT["ChatOverlay · Ask AI"]
+        ONBOARD["OnboardingView"]
+        subgraph VIEWS["Views"]
+            direction LR
+            V1["NotesView"]
+            V2["WhispersView"]
+            V3["TodosView"]
+            V4["MemoryView<br/>Phase 3 placeholder"]
+            V5["HiDockView"]
+            V6["SettingsView"]
+        end
+        APP --> SIDEBAR
+        APP --> VIEWS
+        APP --> MODAL
+        APP --> CHAT
+        APP --> SNAPCARD
+        APP --> TOAST
+    end
+
+    subgraph STATE["Front-end state + IPC"]
+        ZSTATE["useAppState (zustand)"]
+        TAURIWRAP["lib/tauri.ts · invoke wrapper"]
+        VIEWS --> ZSTATE
+        ZSTATE --> TAURIWRAP
+    end
+
+    subgraph CORE["Tauri Rust backend (app/src-tauri/src/)"]
+        direction TB
+        MAIN["main.rs / lib.rs"]
+        QUEUE["pipeline_queue.rs<br/>single-flight FIFO"]
+        subgraph CMDS["commands/ — 17 modules"]
+            C1["app_lifecycle"]
+            C2["import"]
+            C3["meetings"]
+            C4["ask_meeting"]
+            C5["clusters"]
+            C6["folder"]
+            C7["hardware"]
+            C8["keychain"]
+            C10["snapgpu"]
+            C11["speakers / speaker_rename"]
+            C12["todos"]
+            C14["backup"]
+        end
+        subgraph STORAGE["storage/"]
+            S1["meetings.rs · meta.md frontmatter"]
+            S2["user_config.rs · user.json"]
+            S3["audit.rs · audit log"]
+            S4["backup.rs · zip in/out"]
+        end
+        MAIN --> CMDS
+        C2 --> QUEUE
+        CMDS --> STORAGE
+    end
+
+    subgraph PY["Python pipeline workers (app/python/)"]
+        direction TB
+        BATCH["batch_ingest.py orchestrator"]
+        ASR["ASR routing<br/>whisper.cpp · SenseVoice · Parakeet · Qwen3-ASR"]
+        DIAR["pyannote + CoreML<br/>speaker_inference"]
+        NAME["name_speakers.py"]
+        SUMM["upgrade_summaries.py"]
+        IDX["index_meeting.py"]
+        TODO_X["extract_todos.py"]
+        AGG["aggregate_index · catalog_builder"]
+        ASKPY["ask_chat.py<br/>2-phase Selection→Answer"]
+        MARK["snapgpu_marker.py"]
+        BATCH --> ASR
+        ASR --> DIAR
+        DIAR --> NAME
+        NAME --> SUMM
+        SUMM --> IDX
+        IDX --> TODO_X
+        TODO_X --> AGG
+        SUMM -.-> MARK
+        IDX -.-> MARK
+    end
+
+    subgraph NATIVE["Native CLIs"]
+        N1["whisper-cli"]
+        N2["parakeet-cli / -zh"]
+        N3["whisper.cpp"]
+    end
+
+    subgraph FS["Local storage — flat markdown"]
+        D1["~/Docknote/meetings/&lt;id&gt;/<br/>meta · transcript · summary<br/>index · todos · audio"]
+        D2["~/Library/.../user.json"]
+        D3["macOS Keychain"]
+    end
+
+    subgraph EXT["External services"]
+        SNAP["SnapGPU<br/>vLLM · Qwen3.5-27B-FP8<br/>spark1 + spark2 over Tailscale"]
+        OPENAI["OpenAI API<br/>GPT-5.1 → 4.1 → 4o"]
+        HIDOCK["HiDock device<br/>USB / BLE"]
+        HF["HuggingFace<br/>model pull · init only"]
+    end
+
+    TAURIWRAP -- "invoke()" --> CMDS
+    QUEUE -- "spawn detached" --> BATCH
+    ASR --> NATIVE
+    SUMM --> SNAP
+    IDX --> SNAP
+    ASKPY --> SNAP
+    SUMM -. fallback .-> OPENAI
+    ASKPY -. fallback .-> OPENAI
+    SNAP -. cold-start pull .-> HF
+    C7 --> HIDOCK
+    BATCH --> FS
+    STORAGE --> FS
+    C8 --> D3
+</div>
+</div>
+
+<h2 id="s3"><span class="num">3.</span>Runtime process topology</h2>
+<p>What&rsquo;s actually alive while the app runs.</p>
+<div class="panel diagram">
+<div class="mermaid">
+flowchart LR
+    subgraph LOCAL["Mac (user's machine)"]
+        direction TB
+        TAURI["Docknote.app · Tauri parent<br/>━━━━━━━━━━━━━<br/>React/Vite WebView<br/>Rust core thread<br/>tokio runtime"]
+        QC[("In-memory queue<br/>{running, pending}")]
+        subgraph CHILDREN["Detached child processes (per import)"]
+            P1["python3.12 batch_ingest.py<br/>setsid · survives app quit"]
+            P2["whisper-cli / sensevoice / parakeet"]
+            P3["pyannote CoreML"]
+        end
+        FSDISK[("~/Docknote/meetings/<br/>+ meta.md polling")]
+        TAURI <--> QC
+        QC -- spawn --> P1
+        P1 -- subprocess --> P2
+        P1 -- subprocess --> P3
+        P1 -- writes --> FSDISK
+        TAURI -- "polls 1s" --> FSDISK
+    end
+
+    subgraph TS["Tailscale tailnet"]
+        SP1["spark1 · GB10<br/>vLLM :8000<br/>Qwen3.5-27B-FP8"]
+        SP2["spark2 · GB10<br/>mirror"]
+    end
+
+    subgraph CLOUD["Public internet"]
+        OAI["api.openai.com"]
+    end
+
+    HW["HiDock device<br/>USB Mass Storage / BLE 5.0"]
+
+    P1 -- "HTTPS · OpenAI-compat" --> SP1
+    P1 -. mirror .-> SP2
+    P1 -. fallback .-> OAI
+    TAURI <--> HW
+</div>
+</div>
+
+<div class="callout">
+  <strong>Key invariants encoded in the code.</strong>
+  <code>pipeline_queue.rs</code> is a single-flight FIFO — concurrent imports queue, never run in parallel. Children are detached with <code>setsid()</code>, so quitting Docknote mid-pipeline does not kill the work; the next launch sees the result. React polls <code>meta.md</code> at the same 1 s cadence the queue uses, so UI and queue see the same transition. The queue is in-memory only — pending-but-not-yet-spawned imports are lost on app exit, but the meeting dir + stub <code>meta.md</code> survive on disk so the user can re-import.
+</div>
+
+<h2 id="s4"><span class="num">4.</span>Import-and-process sequence</h2>
+<p>The load-bearing flow. Everything else (Notes, Ask AI, Memory) reads what this writes.</p>
+<div class="panel diagram">
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as React UI<br/>(NotesView)
+    participant Rust as Tauri Rust<br/>(commands/import)
+    participant Q as pipeline_queue
+    participant Py as python batch_ingest
+    participant ASR as ASR engine
+    participant Pyan as pyannote + CoreML
+    participant Snap as SnapGPU (vLLM)
+    participant FS as ~/Docknote/meetings/&lt;id&gt;/
+
+    User->>UI: pick audio file (or HiDock sync)
+    UI->>Rust: invoke("import_audio", path)
+    Rust->>Rust: hash audio (SHA-256 streaming)
+    alt audio_hash already in some meta.md
+        Rust-->>UI: existing meeting_id (no duplicate)
+    else new meeting
+        Rust->>FS: mkdir &lt;id&gt;/ + write stub meta.md
+        Rust->>Q: enqueue(meeting_id)
+        Q->>Py: spawn detached (setsid)
+    end
+
+    activate Py
+    Py->>FS: meta.md status = Transcribing
+    Py->>ASR: route by language / device
+    ASR-->>Py: timestamped segments
+    Py->>FS: write transcript.md
+    Py->>FS: status = Identifying speakers
+    Py->>Pyan: VAD + diarization + embeddings
+    Pyan-->>Py: speaker turns + 256-d voiceprints
+    Py->>Snap: speaker_naming prompt
+    Snap-->>Py: human-readable speaker labels
+    Py->>FS: rewrite transcript.md with names
+    Py->>FS: status = Summarizing
+    Py->>Snap: summary prompt
+    Snap-->>Py: summary text
+    Py->>FS: write summary.md
+    Py->>Snap: index_meeting prompt
+    Snap-->>Py: structured index
+    Py->>FS: write index.md (idempotent · input_hash)
+    Py->>Snap: extract_todos prompt
+    Snap-->>Py: todo lines
+    Py->>FS: append todos.md
+    Py->>FS: status = Complete
+    deactivate Py
+
+    loop while Py running
+        UI->>Rust: invoke("get_meeting_status")
+        Rust->>FS: read meta.md frontmatter
+        Rust-->>UI: status + stage chip
+    end
+
+    Q->>Q: pop next pending
+</div>
+</div>
+
+<div class="callout">
+  <strong>Idempotency.</strong> <code>index_meeting.py</code> stores SHA-256 of <code>transcript.md ‖ summary.md</code> in <code>index.md</code> frontmatter as <code>input_hash</code>. A re-run with unchanged inputs and matching <code>indexer_version</code> is a sub-50ms no-op. Bumping <code>INDEXER_VERSION</code> forces a global re-index.<br/><br/>
+  <strong>Privacy boundary.</strong> Transcript + summary go up to the LLM (SnapGPU first, OpenAI fallback). Audio never leaves the device. Sensitive meetings stay on SnapGPU only — never routed to OpenAI.
+</div>
+
+<h2 id="s5"><span class="num">5.</span>Ask-AI sequence (Selection → Answer)</h2>
+<p>Two-phase RAG-without-vectors: a <em>selection</em> pass picks which meetings are relevant from a JSONL catalog, then an <em>answer</em> pass streams over the selected summaries.</p>
+<div class="panel diagram">
+<div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User
+    participant Chat as ChatOverlay
+    participant Rust as commands/ask_meeting
+    participant Py as ask_chat.py
+    participant Cat as catalog (JSONL)
+    participant LLM as SnapGPU / OpenAI
+
+    User->>Chat: question + scope (meeting / cluster / general)
+    Chat->>Rust: invoke("ask_meeting", q, scope)
+    Rust->>Py: spawn (tokio process)
+    activate Py
+    alt scope = meeting or cluster
+        Note right of Py: Skip Phase 1 — selection is implicit
+        Py-->>Chat: type=selection, meetings=[...]
+    else scope = general
+        Py->>Cat: read catalog
+        Py->>LLM: selection prompt (v2f)
+        LLM-->>Py: meeting IDs + mode (narrow|sectioned)
+        Py-->>Chat: type=selection
+    end
+    Py->>LLM: answer prompt (v11) over selected summaries
+    loop streaming
+        LLM-->>Py: token chunk
+        Py-->>Chat: type=token, text
+    end
+    LLM-->>Py: done
+    Py-->>Chat: type=coverage, text
+    Py-->>Chat: type=done
+    deactivate Py
+</div>
+</div>
+
+<p><strong>Stdout protocol</strong> — one JSON object per line (UTF-8, <code>\n</code>). Event order is fixed: <code>selection → 0..N tokens → coverage → done</code>. On failure: <code>type=error</code> and non-zero exit. <strong>Stub mode</strong>: <code>DOCKNOTE_TEST_STUB=1</code> bypasses the LLM and emits canned events.</p>
+
+<h2 id="s6"><span class="num">6.</span>Storage layout (the actual data model)</h2>
+<div class="panel diagram">
+<div class="mermaid">
+flowchart TB
+    subgraph HOME["$HOME"]
+        subgraph DOCK["~/Docknote/"]
+            ROOT["meetings/<br/>(or user-selected path)"]
+            ROOT --> M1["20260503-1430_q3-pricing/"]
+            ROOT --> M2["20260504-0900_alex-1on1/"]
+            ROOT --> Mn["…"]
+            M1 --> F1["meta.md<br/>YAML frontmatter:<br/>id · title · date · duration<br/>cluster · attendees · audio_hash<br/>status · indexer_version"]
+            M1 --> F2["transcript.md<br/>speaker-named, timestamped"]
+            M1 --> F3["summary.md"]
+            M1 --> F4["index.md<br/>frontmatter (frozen contract)<br/>+ Topics / Decisions / Actions /<br/>People / Key claims / Open Qs"]
+            M1 --> F5["todos.md"]
+            M1 --> F6["audio.opus / .wav / .m4a"]
+        end
+        subgraph LIB["~/Library/Application Support/Docknote/"]
+            UJSON["user.json<br/>UserConfig:<br/>meeting_root · onboarding_done<br/>preferred_models · …"]
+        end
+        subgraph KC["macOS Keychain"]
+            K1["openai_api_key"]
+            K2["snapgpu_token (if any)"]
+        end
+    end
+
+    AGG["aggregate_index.py<br/>catalog_builder.py"]
+    M1 -. read .-> AGG
+    M2 -. read .-> AGG
+    Mn -. read .-> AGG
+    AGG -. writes .-> CAT["catalog.jsonl<br/>scope=general selection input"]
+</div>
+</div>
+
+<div class="callout">
+  <strong>No relational store for content.</strong> SQLite makes no appearance for meeting data. The only state outside <code>~/Docknote/</code> is <code>user.json</code> (preferences) and the macOS Keychain (secrets). Everything else is markdown.<br/><br/>
+  The <code>DOCKNOTE_MEETING_ROOT</code> env var overrides <code>meeting_root()</code> for tests and the bundled sample-meeting onboarding demo. Production never sets it.
+</div>
+
+<h2 id="s7"><span class="num">7.</span>Tauri command surface (the IPC contract)</h2>
+<div class="panel tight">
+<table>
+<thead><tr><th>Module</th><th>Representative commands</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>app_lifecycle</code></td><td>startup hooks, shutdown</td><td>one-shot init, prefetch keychain, kick GrowthBook</td></tr>
+<tr><td><code>import</code></td><td><code>import_audio</code>, internal <code>spawn_pipeline</code></td><td>hash → dedupe → enqueue → detached spawn</td></tr>
+<tr><td><code>meetings</code></td><td><code>list_meetings</code>, <code>get_meeting_status</code>, <code>get_meeting</code>, <code>delete_meeting</code></td><td>read-side over <code>~/Docknote/meetings/</code></td></tr>
+<tr><td><code>ask_meeting</code></td><td>streaming Q&amp;A</td><td>spawn <code>ask_chat.py</code>, pipe JSON-lines back to UI</td></tr>
+<tr><td><code>clusters</code></td><td>list / set / rename</td><td>cluster colour + assignment per meeting</td></tr>
+<tr><td><code>folder</code></td><td>choose meeting root, validate</td><td>wave-10 user-selectable corpus path</td></tr>
+<tr><td><code>hardware</code></td><td>enumerate / connect / sync</td><td>HiDock USB + BLE</td></tr>
+<tr><td><code>keychain</code></td><td>store / read / delete secret</td><td>wrapper over macOS Keychain</td></tr>
+<tr><td><code>maintenance</code></td><td>rebuild index, vacuum tmp</td><td>manual admin actions</td></tr>
+<tr><td><code>snapgpu</code></td><td>health, panel state</td><td>live status of vLLM endpoints</td></tr>
+<tr><td><code>speakers</code> / <code>speaker_rename</code></td><td>rename across one meeting (Unicode-aware)</td><td>regex with <code>\p{L}\p{N}</code> boundaries</td></tr>
+<tr><td><code>todos</code></td><td>list / toggle / extract</td><td>UI for <code>todos.md</code> rollup</td></tr>
+<tr><td><code>user</code> / <code>viewed</code></td><td>preferences, &ldquo;seen&rdquo; flags</td><td><code>user.json</code> writes</td></tr>
+<tr><td><code>backup</code></td><td>zip out / zip in (RestoreWizard)</td><td>full corpus snapshot</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s8"><span class="num">8.</span>Python pipeline surface (the worker scripts)</h2>
+<div class="panel tight">
+<table>
+<thead><tr><th>Stage</th><th>Script</th><th>LLM?</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Orchestrator</td><td><code>batch_ingest.py</code></td><td>—</td><td>called per detached spawn; sequences the rest</td></tr>
+<tr><td>ASR (English fast)</td><td><code>whisper.cpp</code> via Swift CLI</td><td>local</td><td>default English path</td></tr>
+<tr><td>ASR (CJK)</td><td><code>sensevoice_cli.py</code></td><td>local</td><td>wave-18 CJK routing</td></tr>
+<tr><td>ASR (Parakeet)</td><td><code>parakeet-cli</code> / <code>parakeet-zh-cli</code></td><td>local</td><td>alternative engine</td></tr>
+<tr><td>ASR (Qwen3)</td><td><code>qwen3_asr_cli.py</code></td><td>local</td><td>newest, optional</td></tr>
+<tr><td>VAD / diarization</td><td><code>coreml_embedding.py</code> + pyannote CoreML</td><td>local</td><td>pyannote-segmentation-3.0 + ECAPA-TDNN</td></tr>
+<tr><td>Speaker fusion</td><td><code>speaker_inference.py</code></td><td>local</td><td>turn alignment + clustering</td></tr>
+<tr><td>Speaker naming</td><td><code>name_speakers.py</code></td><td>LLM</td><td>first cloud step; sensitivity → SnapGPU only</td></tr>
+<tr><td>Summary</td><td><code>upgrade_summaries.py</code></td><td>LLM</td><td>chain GPT-5.1 → 4.1 → 4o, or SnapGPU</td></tr>
+<tr><td>Index</td><td><code>index_meeting.py</code></td><td>LLM</td><td>wraps in <code>snapgpu_marker.mark_active(_, "Summarizing")</code> — UI shows same chip</td></tr>
+<tr><td>Todos</td><td><code>extract_todos.py</code></td><td>LLM</td><td>best-effort, non-blocking on failure</td></tr>
+<tr><td>Aggregate</td><td><code>aggregate_index.py</code>, <code>catalog_builder.py</code></td><td>—</td><td>rebuilds the catalog used by general-scope Ask</td></tr>
+<tr><td>Ask</td><td><code>ask_chat.py</code></td><td>LLM</td><td>not in import path; spawned per Ask-AI invocation</td></tr>
+<tr><td>Status helper</td><td><code>snapgpu_marker.py</code></td><td>—</td><td>atomic <code>meta.md</code> status writer</td></tr>
+<tr><td>Quality</td><td><code>coverage_note.py</code>, <code>quality_export.py</code></td><td>—</td><td>dev / eval only</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s9"><span class="num">9.</span>External integrations</h2>
+<div class="panel">
+  <h3>SnapGPU (primary LLM)</h3>
+  <p>vLLM 0.7+ serving <code>Qwen/Qwen3.5-27B-FP8</code> on Sean&rsquo;s GB10 spark1 (spark2 mirror) over Tailscale, port 8000, OpenAI-compatible Chat Completions API. The macOS client treats it as a URL flip from <code>api.openai.com</code>. Cold start ≈ minutes; steady-state latency competitive with cloud GPT-4o. Spec: <code>~/seanslab/Docknote/docs/sdd-snapgpu-v2.md</code> + <code>~/seanslab/Docknote/app/snapgpu/README.md</code>.</p>
+  <h3>OpenAI fallback</h3>
+  <p><code>upgrade_summaries.PREFERRED_MODELS</code> chain: GPT-5.1 → 4.1 → 4o. Triggered when SnapGPU is unhealthy or explicitly disabled per-meeting (Settings). Sensitive meetings never fall back to OpenAI.</p>
+  <h3>HiDock device</h3>
+  <p>Hardware capture target. USB Mass Storage on desktop; BLE 5.0 GATT on (future) mobile. The app auto-discovers <code>meetings/</code> on the device, copies new audio into <code>~/Docknote/meetings/&lt;id&gt;/</code>, then enqueues import. Code: <code>commands/hardware.rs</code>.</p>
+  <h3>HuggingFace</h3>
+  <p>Init-only — <code>huggingface-cli download</code> populates the spark with model weights. No runtime traffic from the client.</p>
+</div>
+
+<h2 id="s10"><span class="num">10.</span>What the v3 architecture doc claims vs. what the code does</h2>
+<p>Recording these intentionally so future readers don&rsquo;t follow a stale spec.</p>
+<div class="panel tight">
+<table>
+<thead><tr><th>v3 doc claims</th><th>Code reality (2026-05-05)</th></tr></thead>
+<tbody>
+<tr><td>HiDock is the truth source; client is cache only</td><td><code>~/Docknote/meetings/</code> on the user&rsquo;s Mac is the truth; HiDock is one ingest path among many (file import is equally first-class)</td></tr>
+<tr><td>SQLCipher encrypted local cache</td><td>No SQLCipher anywhere; flat markdown only</td></tr>
+<tr><td>Hot / warm / cold tiers, ZIP archive for cold</td><td>Flat directory; backup is a separate zip-in/zip-out feature, not a tiering scheme</td></tr>
+<tr><td>Cloud &ldquo;tmpfs · burn-after-read&rdquo; with E2EE envelope</td><td>SnapGPU is plain HTTPS over Tailscale to a private vLLM; the privacy story is &ldquo;private network + no server-side persistence&rdquo;, not memset+envelope</td></tr>
+<tr><td>Modal / RunPod serverless</td><td>Self-hosted spark1+spark2 GB10s; Modal/RunPod were earlier candidates, deferred to Phase 3 per REQ-078</td></tr>
+<tr><td>LLM-driven global indices (<code>timeline.md</code>, <code>topics.md</code>, <code>decisions.md</code>) maintained by cloud</td><td>Per-meeting <code>index.md</code> only; <code>aggregate_index.py</code> rolls up locally into <code>catalog.jsonl</code> for Ask-scope=general. No global <code>timeline.md</code>.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The Phase-3 Memory work (<code>docknote-brainmemory-design.md</code>) is where the cross-meeting recall layer actually lands — engrams + galaxy + Geomi confirmation flow — and it deliberately does <em>not</em> re-introduce the <code>facts</code> table the v3 doc implied (principle 1: less structure, more intelligence).</p>
+
+<h2 id="s11"><span class="num">11.</span>Where Memory (Phase 3) plugs in</h2>
+<p>Locked landing surface: <code>rachel-redesign/v4.3-memory-galaxy-floating-ask.html</code>. Spec: <code>docknote-brainmemory-design.md</code> §9.1.</p>
+<div class="panel diagram">
+<div class="mermaid">
+flowchart LR
+    subgraph EXISTING["Today (Phases 1-2)"]
+        IDX["per-meeting index.md"]
+        CAT["catalog.jsonl (aggregate)"]
+        ASK["ask_chat.py general scope"]
+    end
+
+    subgraph PH3["Phase 3 — Memory"]
+        ENG["engram store<br/>sentence vectors + RAPTOR"]
+        GEOMI["Geomi confirmation<br/>action catalyzes memory"]
+        GAL["galaxy view<br/>MemoryView"]
+        PEOPLE["people lens<br/>+ killer-move scope×person"]
+    end
+
+    IDX --> ENG
+    CAT --> ENG
+    ENG --> GAL
+    ENG --> PEOPLE
+    ENG --> GEOMI
+    GEOMI --> ENG
+    PEOPLE -. cross-meeting query .-> ASK
+</div>
+</div>
+
+<div class="callout">
+  <strong>Integration constraints (from the two locked principles).</strong><br/>
+  1. The engram store is an <em>index, not a facts table</em>. The markdown corpus stays the only truth. (principle 1)<br/>
+  2. Every consequential write to user-visible memory routes through Geomi confirmation. Direct file edit remains a power-user escape hatch. (principle 2)
+</div>
+
+<p><strong>Still unresolved</strong> (per the conversation that triggered this diagram): consolidation pass triggers, Karpathy <code>cortex/</code> read-write contract, entity resolution for the people lens, retrieval shape for the four people-lens queries, and the <code>note ↔ engram</code> cardinality (does one long meeting yield one engram or many?).</p>
+
+<footer>
+  Drawn from live source at <code>~/seanslab/Docknote/app/</code> on 2026-05-05. Companion markdown: <code>docknote-architecture.md</code>. Diagrams render via Mermaid v10 (CDN); printable as-is. Where this document and <code>docs/Docknote_Architecture_v3.md</code> disagree, this snapshot follows the code.
+</footer>
+
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif',
+      fontSize: "13px",
+      primaryColor: "#FFFFFF",
+      primaryTextColor: "#2A2825",
+      primaryBorderColor: "#C9C2AE",
+      lineColor: "#8A8472",
+      secondaryColor: "#FBFAF5",
+      tertiaryColor: "#F2EEE2",
+      clusterBkg: "#FBFAF5",
+      clusterBorder: "#C9C2AE",
+      edgeLabelBackground: "#F7F5EF",
+      noteBkgColor: "#E0F2F4",
+      noteBorderColor: "#0097a7",
+      activationBkgColor: "#E0F2F4",
+      activationBorderColor: "#0097a7"
+    },
+    flowchart: { htmlLabels: true, curve: "basis", padding: 14 },
+    sequence: { mirrorActors: false, useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
+</content>
