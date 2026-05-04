@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Where Memory plugs into Docknote — three seams, four decisions</title>
+<style>
+  :root {
+    --bg: #F7F5EF;
+    --panel: #FFFFFF;
+    --rule: #E5E1D6;
+    --rule-soft: #EDE9DD;
+    --ink: #2A2825;
+    --ink-soft: #6E695F;
+    --ink-muted: #A29C8C;
+    --brand: #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft: #E0F2F4;
+    --warn: #C9933E;
+    --warn-soft: #FBF1DE;
+    --warn-strong: #7A5E1F;
+    --shadow: 0 18px 40px -16px rgba(0,0,0,0.18), 0 4px 12px -4px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+    margin: 0;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 40px 96px; }
+  header.doc-header { border-bottom: 1px solid var(--rule); padding-bottom: 24px; margin-bottom: 36px; }
+  header.doc-header h1 {
+    font-family: "Iowan Old Style", "Charter", Georgia, serif;
+    font-weight: 600; font-size: 30px; margin: 0 0 6px; letter-spacing: -0.01em;
+  }
+  header.doc-header .meta { color: var(--ink-soft); font-size: 13px; }
+  h2 {
+    font-family: "Iowan Old Style", "Charter", Georgia, serif;
+    font-weight: 600; font-size: 22px; margin: 48px 0 14px; letter-spacing: -0.005em;
+  }
+  h2 .num { color: var(--brand-strong); font-variant-numeric: tabular-nums; margin-right: 10px; }
+  h3 { font-size: 16px; margin: 18px 0 6px; }
+  p { margin: 8px 0 12px; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px; background: var(--rule-soft); padding: 1px 5px; border-radius: 4px;
+  }
+  a { color: var(--brand-strong); text-decoration: none; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px 26px; margin: 14px 0 22px; box-shadow: var(--shadow);
+  }
+  .panel.tight { padding: 14px 18px; }
+  .panel.diagram { padding: 20px 12px 8px; overflow-x: auto; }
+  .panel.diagram .mermaid { display: flex; justify-content: center; min-width: 760px; }
+
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    padding: 10px 14px; margin: 0 0 14px;
+    background: var(--rule-soft); border-radius: 6px;
+    font-size: 12.5px; color: var(--ink-soft);
+  }
+  .legend .swatch {
+    display: inline-block; width: 14px; height: 14px; border-radius: 3px;
+    vertical-align: -3px; margin-right: 6px; border: 1px solid var(--rule);
+  }
+  .legend .sw-existing { background: #FBFAF5; border-color: #C9C2AE; }
+  .legend .sw-new { background: var(--brand-soft); border-color: var(--brand-strong); }
+  .legend .sw-decision { background: var(--warn-soft); border-color: var(--warn); }
+
+  .seam {
+    border-left: 4px solid var(--brand);
+    background: var(--brand-soft);
+    padding: 14px 18px; border-radius: 0 8px 8px 0;
+    margin: 10px 0 14px;
+  }
+  .seam .tag {
+    display: inline-block; background: var(--brand-strong); color: #fff;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+    padding: 2px 9px; border-radius: 999px; margin-right: 8px;
+  }
+  .seam h3 { display: inline; margin: 0; color: var(--brand-strong); }
+  .seam ul { margin: 8px 0 0; padding-left: 22px; }
+  .seam li { margin: 3px 0; }
+
+  .grid-decisions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin: 12px 0 18px;
+  }
+  @media (max-width: 880px) { .grid-decisions { grid-template-columns: 1fr; } }
+  .decision {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .decision .num {
+    display: inline-block; width: 26px; height: 26px; line-height: 26px;
+    text-align: center; background: var(--warn-soft); color: var(--warn-strong);
+    font-weight: 700; border-radius: 50%; margin-right: 8px;
+    font-size: 13px;
+  }
+  .decision h3 { display: inline; font-family: "Iowan Old Style", Georgia, serif; font-size: 17px; margin: 0; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--rule-soft); }
+  .opt.pick { background: var(--brand-soft); border-color: #BFE5E9; }
+  .opt .badge {
+    flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--rule-soft); color: var(--ink-soft);
+    margin-top: 1px;
+  }
+  .opt.pick .badge { background: var(--brand-strong); color: #fff; }
+  .opt p { margin: 0; font-size: 13.5px; }
+  .opt p strong { color: var(--ink); }
+
+  .nochange {
+    background: #FBFAF5; border: 1px dashed var(--rule);
+    border-radius: 8px; padding: 14px 18px; margin: 14px 0 22px;
+  }
+  .nochange ul { margin: 6px 0 0; padding-left: 22px; }
+  .nochange li { margin: 3px 0; color: var(--ink-soft); }
+
+  footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-header">
+  <h1>Where Memory plugs into Docknote</h1>
+  <div class="meta">
+    Three seams · four decisions · 2026-05-05<br/>
+    Companion to <code>docknote-architecture.html</code> (as-built) and <code>docknote-brainmemory-design.md</code> (Phase 3 spec).
+  </div>
+</header>
+
+<p>
+  Memory doesn&rsquo;t slot into one layer of Docknote — it threads through three. But only one of those three is architecturally novel; the other two follow the existing pattern. Below: the overlay diagram, a short tour of each seam, and the four decisions hidden inside seam A that are actually load-bearing.
+</p>
+
+<h2><span class="num">1.</span>The overlay — three seams on the existing architecture</h2>
+
+<div class="legend">
+  <span><span class="swatch sw-existing"></span>Existing (Phases 1 + 2 · shipped)</span>
+  <span><span class="swatch sw-new"></span>New for Memory (Phase 3)</span>
+  <span><strong>A · B · C</strong> = the three seams</span>
+</div>
+
+<div class="panel diagram">
+<div class="mermaid">
+flowchart TB
+    subgraph UI["UI shell — React"]
+        direction LR
+        EX_VIEWS["Notes · Whispers · Todos · HiDock · Settings"]:::ex
+        MEM_VIEW["MemoryView<br/>galaxy + vertical time<br/>+ people lens<br/>+ floating ask"]:::nw
+        BRAIN_INBOX["Brain Inbox<br/>Geomi confirmation queue"]:::nw
+    end
+
+    subgraph IPC["Tauri commands · IPC contract"]
+        direction LR
+        EX_CMDS["import · meetings · ask_meeting<br/>clusters · folder · hardware<br/>keychain · backup · todos · …"]:::ex
+        MEM_CMD["commands/memory.rs<br/>(galaxy · scope query · engram lookup)"]:::nw
+        GEOMI_CMD["commands/geomi.rs<br/>(propose · confirm · reject)"]:::nw
+        ASK_MEM["commands/ask_memory.rs<br/>(scope×person · time×person)"]:::nw
+    end
+
+    subgraph PIPE_IMPORT["Python pipeline · per-import (existing FIFO)"]
+        direction LR
+        EX_PIPE["ASR → diarization → speaker_naming<br/>→ summary → index → todos → aggregate"]:::ex
+        EXTRACT["extract_engrams.py<br/>sentence-segment · embed · write"]:::nw
+    end
+
+    subgraph BG["Background · corpus-wide (new)"]
+        CONSOL["consolidate_engrams.py<br/>RAPTOR clustering · entity merge<br/>(every N new engrams)"]:::nw
+    end
+
+    subgraph FS["Local storage"]
+        direction TB
+        EX_FS["~/Docknote/meetings/&lt;id&gt;/<br/>meta · transcript · summary · index · todos · audio"]:::ex
+        ENG_MD["engrams.md<br/>per-meeting · sentence text + IDs"]:::nw
+        BRAIN_DB["~/Docknote/.brain/engrams.sqlite<br/>vectors · RAPTOR clusters · entity table"]:::nw
+    end
+
+    subgraph EXT["External services"]
+        direction LR
+        SNAP["SnapGPU<br/>(existing · LLM)"]:::ex
+        OAI["OpenAI fallback"]:::ex
+        COREML["CoreML local embeddings<br/>(new · sentence-transformers on-device)"]:::nw
+    end
+
+    %% existing flows
+    EX_VIEWS --> EX_CMDS --> EX_PIPE --> EX_FS
+    EX_PIPE --> SNAP
+
+    %% Seam C — UI + IPC
+    MEM_VIEW --> MEM_CMD --> BRAIN_DB
+    BRAIN_INBOX --> GEOMI_CMD --> BRAIN_DB
+    GEOMI_CMD --> EX_FS
+    MEM_VIEW --> ASK_MEM
+    ASK_MEM --> BRAIN_DB
+    ASK_MEM --> SNAP
+
+    %% Seam B — pipeline tail
+    EX_PIPE --> EXTRACT
+    EXTRACT --> COREML
+    EXTRACT --> ENG_MD
+    EXTRACT --> BRAIN_DB
+
+    %% Seam B continued — background pass
+    BRAIN_DB -. trigger .-> CONSOL
+    CONSOL --> SNAP
+    CONSOL --> BRAIN_DB
+
+    %% seam labels
+    SEAM_C(["Seam C<br/>UI + IPC"]):::seam
+    SEAM_B(["Seam B<br/>pipeline tail"]):::seam
+    SEAM_A(["Seam A<br/>storage · NEW INDEX"]):::seam
+    SEAM_C -.- MEM_VIEW
+    SEAM_B -.- EXTRACT
+    SEAM_A -.- BRAIN_DB
+
+    classDef ex fill:#FBFAF5,stroke:#C9C2AE,color:#6E695F
+    classDef nw fill:#E0F2F4,stroke:#0097a7,color:#0a6a73,stroke-width:2px
+    classDef seam fill:#FBF1DE,stroke:#C9933E,color:#7A5E1F,stroke-width:2px,stroke-dasharray: 4 3
+</div>
+</div>
+
+<h2><span class="num">2.</span>What each seam adds</h2>
+
+<div class="seam">
+  <span class="tag">SEAM A</span><h3>Storage — the only architecturally novel seam</h3>
+  <p>Today, Docknote has no global index over content. Per-meeting <code>index.md</code> + a flat <code>catalog.jsonl</code> roll-up is the entire cross-meeting story. Memory introduces:</p>
+  <ul>
+    <li><strong><code>~/Docknote/.brain/engrams.sqlite</code></strong> — sentence vectors, RAPTOR cluster IDs, entity-name resolution table. <em>Indexes only</em>, per principle 1. First time SQLite enters the architecture for content.</li>
+    <li><strong><code>~/Docknote/meetings/&lt;id&gt;/engrams.md</code></strong> — sentence text + stable IDs, born in the meeting folder like <code>index.md</code> is. Co-located with truth so vectors can be re-derived from markdown if SQLite ever corrupts.</li>
+  </ul>
+  <p style="margin-top: 10px"><strong>This is the load-bearing decision.</strong> Everything else follows from it. Four sub-decisions live inside this seam — see §3.</p>
+</div>
+
+<div class="seam">
+  <span class="tag">SEAM B</span><h3>Pipeline tail — follows existing pattern</h3>
+  <p><code>batch_ingest.py</code> today ends at <code>aggregate_index.py</code>. Memory adds two stages, both following the existing pattern:</p>
+  <ul>
+    <li><strong><code>extract_engrams.py</code></strong> — sentence-segment, embed (local CoreML), write to <code>engrams.md</code> + SQLite. Runs <em>per meeting</em>, synchronous tail of the import pipeline. Wrapped with <code>snapgpu_marker</code> so the existing &ldquo;Summarizing&rdquo; chip covers it — no new pipeline UI stage.</li>
+    <li><strong><code>consolidate_engrams.py</code></strong> — RAPTOR clustering pass over the whole engram corpus + entity merge/split. Runs <em>occasionally</em> (cron-ish, every N new engrams), uses SnapGPU for cluster-summary LLM calls. <em>Genuinely new</em> because nothing today runs corpus-wide.</li>
+  </ul>
+</div>
+
+<div class="seam">
+  <span class="tag">SEAM C</span><h3>UI + IPC — three new surfaces</h3>
+  <ul>
+    <li><strong><code>MemoryView</code></strong> (Phase-3 placeholder today) → galaxy + vertical time column + floating ask + people lens. Behind <code>commands/memory.rs</code>. Locked mockup: <code>rachel-redesign/v4.3-memory-galaxy-floating-ask.html</code>.</li>
+    <li><strong>Brain Inbox</strong> — Geomi confirmation queue. Either its own sidebar item or a modal launched from a Memory badge. Behind <code>commands/geomi.rs</code>. <em>This is the surface where principle 2 lives</em> — every consequential write routes through here.</li>
+    <li><strong>Ask integration</strong> — sibling <code>commands/ask_memory.rs</code> rather than overloading <code>ask_meeting</code>. Prompts and retrieval shape diverge enough (scope×person, time×person) that one module would get messy.</li>
+  </ul>
+</div>
+
+<h2><span class="num">3.</span>Four decisions hidden in seam A</h2>
+<p>
+  These are what&rsquo;s actually unsettled. Each is a fork; each fork affects how the rest looks. Recommendations marked <strong>★</strong>.
+</p>
+
+<div class="grid-decisions">
+
+  <div class="decision">
+    <span class="num">1</span><h3>Engram granularity</h3>
+    <p style="font-size: 13.5px; color: var(--ink-soft); margin-top: 8px">
+      A 90-min meeting has 200+ sentences. What&rsquo;s a galaxy dot?
+    </p>
+    <div class="opt">
+      <span class="badge">A</span>
+      <p><strong>Sentence-level dot</strong> — every sentence is an engram. Dense galaxy, expensive consolidation, hard to scan.</p>
+    </div>
+    <div class="opt pick">
+      <span class="badge">★ B</span>
+      <p><strong>Passage-level dot</strong> — coherent passages (~10–20 per meeting). The mockup&rsquo;s &ldquo;one dot per meeting&rdquo; only works if engram = passage. Sentence vectors still indexed underneath for retrieval, but the dot is the passage.</p>
+    </div>
+  </div>
+
+  <div class="decision">
+    <span class="num">2</span><h3>Embedding compute</h3>
+    <p style="font-size: 13.5px; color: var(--ink-soft); margin-top: 8px">
+      Where does the embedding model run?
+    </p>
+    <div class="opt pick">
+      <span class="badge">★ A</span>
+      <p><strong>Local CoreML</strong> — sentence-transformers exported to CoreML, runs on the user&rsquo;s Mac. Better for privacy, latency, offline. Same shape as the pyannote-on-CoreML pattern already in the pipeline.</p>
+    </div>
+    <div class="opt">
+      <span class="badge">B</span>
+      <p><strong>Remote on SnapGPU</strong> — keeps one model in one place. Adds a network hop per ingest, breaks offline.</p>
+    </div>
+  </div>
+
+  <div class="decision">
+    <span class="num">3</span><h3>Consolidation cadence</h3>
+    <p style="font-size: 13.5px; color: var(--ink-soft); margin-top: 8px">
+      When does RAPTOR re-cluster?
+    </p>
+    <div class="opt pick">
+      <span class="badge">★ A</span>
+      <p><strong>Per-import (sync)</strong> for the first ~1k engrams. Simple, predictable, no background-job state to manage. Ingest stays fast at small corpora.</p>
+    </div>
+    <div class="opt pick">
+      <span class="badge">★ B</span>
+      <p><strong>Background pass</strong> after ~1k engrams. Triggered by import count delta. Keeps ingest snappy; introduces background-job state. Both modes coexist; the threshold is a config knob.</p>
+    </div>
+  </div>
+
+  <div class="decision">
+    <span class="num">4</span><h3>Entity resolution timing</h3>
+    <p style="font-size: 13.5px; color: var(--ink-soft); margin-top: 8px">
+      When does &ldquo;Alex&rdquo; become <code>person_id</code>?
+    </p>
+    <div class="opt pick">
+      <span class="badge">★ A</span>
+      <p><strong>Eager (at ingest)</strong> — resolve during <code>extract_engrams</code>, write <code>person_id</code> into the entity table. Makes the killer-move (<code>scope × person</code>) a cheap join. Mistakes get fixed via Geomi confirmation.</p>
+    </div>
+    <div class="opt">
+      <span class="badge">B</span>
+      <p><strong>Lazy (at query)</strong> — keep raw names, resolve when the user pins someone. Fast ingest, slow query, and the killer-move becomes a multi-step lookup.</p>
+    </div>
+  </div>
+
+</div>
+
+<h2><span class="num">4.</span>What does NOT change</h2>
+
+<div class="nochange">
+  <strong>Memory is additive. None of the existing system changes shape.</strong>
+  <ul>
+    <li>The markdown corpus stays untouched — <code>meetings/&lt;id&gt;/{meta, transcript, summary, index, todos, audio}</code> is unchanged.</li>
+    <li>The <code>pipeline_queue</code> single-flight FIFO continues to drain one import at a time; engram extraction is just another stage in the existing detached child.</li>
+    <li>Notes / Whispers / Todos / HiDock / Settings — no Memory wiring.</li>
+    <li>Tauri commands, Keychain, <code>user.json</code>, backup zip format — unchanged.</li>
+    <li>SnapGPU consumed exactly as today (OpenAI-compatible HTTP); only the prompts in <code>consolidate_engrams</code> are new.</li>
+  </ul>
+</div>
+
+<footer>
+  Drawn 2026-05-05 in service of the &ldquo;memory itself is still not 100% sure&rdquo; conversation. The four decisions in §3 are the next gate; once those are picked, the storage schema (table list, column types, index keys) follows mechanically.
+</footer>
+
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif',
+      fontSize: "13px",
+      primaryColor: "#FFFFFF",
+      primaryTextColor: "#2A2825",
+      primaryBorderColor: "#C9C2AE",
+      lineColor: "#8A8472",
+      secondaryColor: "#FBFAF5",
+      tertiaryColor: "#F2EEE2",
+      clusterBkg: "#FBFAF5",
+      clusterBorder: "#C9C2AE",
+      edgeLabelBackground: "#F7F5EF"
+    },
+    flowchart: { htmlLabels: true, curve: "basis", padding: 16 }
+  });
+</script>
+</body>
+</html>
+</content>
