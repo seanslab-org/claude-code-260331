@@ -1,0 +1,457 @@
+# Docknote Brain Memory — final design
+
+**Date:** 2026-05-05
+**Status:** Locked. Supersedes `docknote-brainmemory-design.md`, `docknote-brain-story.md`, `docknote-brain-philosophy.md`, `docknote-memory-clarity.md` for purposes of implementation. Those docs are retained as design history.
+**Scope:** Phase 3 ship of Docknote (REQ-070). Mac-only, single-user, single-device.
+
+---
+
+## 1. Two principles
+
+Every decision below traces back to one of two principles. Where they conflict with prior art, they win.
+
+**1. Less structure, more intelligence.** The markdown corpus is the only source of truth. SQLite holds *only* indexes — sentence-level vectors, RAPTOR clusters, entity resolution. There is no `facts` table, no parallel structured claims store. Cross-meeting truth is reconstructed at recall time by an LLM over retrieved chunks.
+
+**2. Action catalyzes memory.** Geomi mediates every consequential update through a confirmation prompt. The act of confirming is what encodes the memory in the user's own brain. Confirmed memories outrank unconfirmed ones. Direct file editing is a power-user escape hatch, not the primary workflow.
+
+---
+
+## 2. The five atoms
+
+| Atom | Layer | Where it lives | What it is |
+|---|---|---|---|
+| **Capture** | raw substrate | `raw/meeting/<id>/transcript.md` (+ `audio.opus`, `metadata.json`) | Immutable transcript with `[SPEAKER_n M:SS]` markers. Source-of-truth, never modified after creation. |
+| **Trace** | hippocampal index | `brain.db` → `sentence_index` | One row per ~3-sentence passage. Holds: `(meeting_id, span_start, span_len)`, vector, speaker, kind label, entity refs, `confirmed_at`. **Not text** — a pointer + attributes into a capture. |
+| **Entity** | hippocampal index | `brain.db` → `entity_index` | One row per person, organization, topic. Holds: canonical name, aliases (incl. email, calendar_id, zoom_id), kind, → engram path. |
+| **Claim** | cortical structure | Meeting-engram frontmatter: `decisions[]`, `action_items[]`, `claims[]`, `attendees[]` | Structured atomic statement with `span` citing a capture and `confidence`. The atomic unit Geomi proposes and the user confirms. |
+| **Engram** | cortical narrative | `cortex/{person,topic,meeting}/<slug>.md` | One markdown page per entity or event. Body is rendered prose, frontmatter is structured. The Karpathy-style wiki page. |
+
+**Mental rule:**
+
+> A capture is *what was said*. A trace is *that* it was said and where to find it. An entity is *who or what it was about*. A claim is *what was claimed*. An engram is *what it all means*.
+
+The trace and claim layers are the bridge between the immutable raw substrate and the user-confirmed cortical narrative. Pull on any sentence in any engram and you can recover the original utterance.
+
+**Three engram kinds:**
+- **`person/<slug>.md`** — someone you talk to (patient, client, opposing counsel, account champion).
+- **`topic/<slug>.md`** — a thing tracked over time (case, project, deal, treatment).
+- **`meeting/<YYYY-MM-DD>-<slug>.md`** — one discrete event. Cites `raw/meeting/<id>/`. The frontmatter is authoritative; the body is regenerable from `raw/`.
+
+Plus one special: **`persona.md`** — the user's own engram, always loaded into working memory.
+
+---
+
+## 3. Storage layout
+
+```
+~/Docknote/brain/                    # git repo (the whole brain)
+│
+├── raw/                             # immutable captures
+│   └── meeting/
+│       └── <YYYY-MM-DD>-<slug>/
+│           ├── transcript.md
+│           ├── audio.opus
+│           └── metadata.json
+│
+└── cortex/                          # the LLM-maintained wiki
+    ├── index.md                     # auto-generated catalog (read by LLM on every recall)
+    ├── log.md                       # chronological event log (one line per consolidation)
+    ├── SCHEMA.md                    # user-editable engram frontmatter contract
+    ├── persona.md
+    ├── person/<slug>.md
+    ├── topic/<slug>.md
+    └── meeting/<YYYY-MM-DD>-<slug>.md
+```
+
+Indexes (regenerable from the corpus at any time) live separately:
+
+```
+~/Library/Application Support/Docknote/brain.db
+  · sentence_index   (sqlite-vec)   — the trace layer (the galaxy)
+  · raptor_nodes                    — hierarchical clusters over the galaxy (constellations)
+  · entity_index                    — name → engram resolution
+  · meeting_fts                     — keyword fallback
+  · proposed_updates                — Geomi confirmation queue
+```
+
+**git as audit substrate.** `git2-rs` library, embedded. `git init` on first run; **no remote, ever** — backup is handled outside the brain layer. Three commit identities: `auto-extractor` (per-meeting), `auto-consolidator` (nightly), `<user>` (human verdicts and direct edits). Commits are transactional — one per encoding pass or one per consolidation pass, atomic across all touched files.
+
+**The three Karpathy navigation files:**
+
+- `cortex/index.md` — auto-generated by `lint()`. Catalog of all engrams: name, kind, one-line description, last-seen, age-band. The LLM reads this on every recall to orient itself.
+- `cortex/log.md` — append-only timeline. One line per consolidation: `2026-05-04 14:42 · meeting/2026-05-04-q3-pricing.md created · person/alex.md updated (role_line) · 2 proposed updates queued`.
+- `cortex/SCHEMA.md` — the engram frontmatter contract. User-editable. The LLM reads it before every encoding/consolidation pass. Schema changes propagate via a `migration` commit that re-validates the corpus.
+
+---
+
+## 4. The Brain API (Hippocampus trait)
+
+The only programmatic surface. No MCP, no HTTP, no wire format. All UI surfaces and Geomi triggers go through this in-process.
+
+```rust
+trait Hippocampus {
+    // ---- Recall (reads) ----
+    fn read_engram(&self, path: &EngramPath) -> Result<Engram>;
+    fn read_meeting(&self, id: &MeetingId) -> Result<Meeting>;
+    fn search_sentences(&self, q: &Query) -> Result<Vec<TraceHit>>;
+    fn search_meetings(&self, q: &MeetingQuery) -> Result<Vec<MeetingMatch>>;
+    fn entity_resolve(&self, name_or_alias: &str) -> Result<Vec<Entity>>;
+    fn facts_about(&self, subject: &EntityId, at: Option<DateTime>) -> Result<Vec<Claim>>;
+
+    // ---- Synthesis ----
+    fn synthesize_themes(&self, q: &SynthesisQuery) -> Result<ThemeSet>;
+    fn pivot_route(&self, q: &str) -> Result<PivotKind>;       // name | date | concept
+
+    // ---- Encoding & consolidation (writes; transactional, git-committed) ----
+    fn open_encoding(&self) -> ConsolidationTxn;               // per-meeting close
+    fn open_consolidation(&self) -> ConsolidationTxn;          // nightly pass
+    fn user_edit(&self, edit: &FieldEdit) -> Result<CommitId>;
+    fn accept_proposed_update(&self, p: &ProposedUpdateId) -> Result<CommitId>;
+    fn reject_proposed_update(&self, p: &ProposedUpdateId) -> Result<()>;
+
+    // ---- History / time-travel ----
+    fn history(&self, path: &EngramPath) -> Result<Vec<CommitRef>>;
+    fn diff(&self, a: &CommitId, b: &CommitId, path: &EngramPath) -> Result<FieldDiff>;
+    fn read_engram_at(&self, path: &EngramPath, at: &CommitId) -> Result<Engram>;
+    fn revert_field(&self, path: &EngramPath, field: &str) -> Result<CommitId>;
+
+    // ---- Lint (Karpathy's third operation) ----
+    fn lint(&self, scope: LintScope) -> Result<LintReport>;
+    fn rebuild_index_md(&self) -> Result<CommitId>;
+    fn append_log_md(&self, entry: LogEntry) -> Result<()>;
+}
+
+trait ConsolidationTxn {
+    fn update_engram_field(&mut self, path: &EngramPath, field: &str,
+                           new_value: Value, sources: Vec<Source>) -> Result<()>;
+    fn demote_field(&mut self, path: &EngramPath, field: &str,
+                    to_section: &str) -> Result<()>;
+    fn add_proposed_update(&mut self, p: ProposedUpdate) -> Result<()>;
+    fn commit(self, message: CommitMessage) -> Result<CommitId>;       // atomic
+    fn abort(self) -> Result<()>;
+}
+```
+
+**Validation contracts (enforced by the impl, not the caller):**
+- Every `update_engram_field` MUST have `sources.len() ≥ 1`. Empty sources → commit rejected.
+- Every `update_engram_field` MUST check `human_locked` on the target field. Locked → divert to `add_proposed_update`.
+- A `ConsolidationTxn` must `commit` or `abort` — drop = abort. Partial state never escapes.
+- `user_edit` always succeeds (the user authored it; lock semantics don't apply to the user).
+
+---
+
+## 5. Write path
+
+Two cadences: **encoding** at meeting close, **consolidation** nightly.
+
+### 5.1 Encoding — per-meeting close
+
+Trigger: meeting recording completes + transcription finishes.
+
+```
+1. Save raw transcript → raw/meeting/<id>/transcript.md (+ audio + metadata).
+
+2. Sentence-level embeddings → sentence_index (one trace per ~3-sentence passage).
+   Embedding model: local CoreML; sentence boundaries via punkt or equivalent.
+
+3. Topic-segment LLM extraction (~one bounded call per ~3-min segment):
+   Input:  segment transcript + canonical entity list (substring-resolved).
+   Output: meeting-engram frontmatter + Summary body, with each claim
+           carrying { span, confidence } citing raw/.
+   Written to: cortex/meeting/<id>.md.
+   Model: Qwen-3-32B via SnapGPU (default) | Claude (opt-in).
+   Cost: ~20-30 LLM calls per 1-hour meeting. Bounded.
+
+4. Per-engram incremental consolidation (Letta sleep-time pattern,
+   field-level + Geomi-mediated approval):
+   For each touched person/topic engram:
+     - txn = hippocampus.open_encoding()
+     - sleep-time prompt reads: engram_current + this meeting's frontmatter
+       + raw transcript chunks + recent meeting engrams involving this entity.
+     - For each field change:
+         · auto-derivable, no prior human verdict      → update_engram_field
+         · prior human-confirmed OR consequential field → add_proposed_update
+                                                         (queued for Geomi)
+     - txn.commit("meeting-close: ...")
+
+5. RAPTOR per-meeting build:
+   Chunks(100tok) → UMAP+GMM soft cluster → 3-level summary tree.
+   Append to raptor_nodes.
+```
+
+**Wall-clock target:** < 60s for a 30-minute meeting on M3 Pro + spark1 SnapGPU.
+
+### 5.2 Consolidation — nightly 03:00 batch
+
+```
+1. Cross-engram reconciliation. For each engram touched today:
+     · Read this week's meetings involving this entity (sentence_index + entity_index).
+     · Re-derive engram body from the actual corpus.
+     · Detect contradictions across meetings; reconcile_flag fields with unresolvable conflict.
+
+2. Age-banding. Claims older than 90d with no corroboration in last 30d
+   demoted from "current" to "background." Text never leaves the engram;
+   only its section moves. age_band: current → recent → background → archived.
+
+3. Theme rollup. RAPTOR weekly rollup re-clusters this week's meeting summaries.
+   Quarterly rollup at quarter boundary only.
+
+4. Theme dedup. Cosine ≥ 0.92 vs existing theme → LLM reconcile → merge.
+
+5. Lint pass:
+     · orphan / dangling engrams flagged
+     · broken citations
+     · stale claims
+     · contradictions (queued as proposed_updates)
+     · schema violations against cortex/SCHEMA.md
+     · gaps (entity in attendees but no person engram)
+   Then:
+     · rebuild_index_md()
+     · append_log_md(today's events)
+
+6. End-of-day nudge generation (consumed by Geomi the next morning).
+
+7. Single git commit: "nightly-consolidation: ..."
+```
+
+**Wall-clock target:** < 5 min on Qwen-3-32B via SnapGPU. Runs while user sleeps.
+
+---
+
+## 6. Read path
+
+Five stages. Each can short-circuit if the previous gives a confident answer.
+
+| Stage | Cost | What it does |
+|---|---|---|
+| **0** | 0 | Working memory: `persona.md` + Recent (engrams touched in last 14 days) preloaded into every assistant turn's system prompt. Combined cap: 4K tokens. |
+| **0.5** | tiny LLM | Pivot routing: classify query as `name` / `date` / `concept`. Skipped for unambiguous entity matches. |
+| **1** | sub-ms | Deterministic coarse filter on `entity_index` (substring + alias) and meeting frontmatter (date scope). Output: ≤50 candidate engrams. |
+| **2** | 1 LLM | Manifest ranking: format candidate set as `(filename · description · last_modified)`, Sonnet-class model picks ≤5 most-relevant engrams. |
+| **3** | 0 LLM | RAPTOR collapsed-tree retrieval: ANN over flattened forest restricted to chosen engrams. Top-20 nodes within a 2K-token budget. |
+| **4** | 1 LLM | Synthesis: extract 3-4 themes from retrieved trace fragments, each with citations to source meeting_ids. |
+
+Stage 3.5 (HippoRAG-2 recognition-memory re-ranker) is deferred to Phase 4; graft only if Phase-3 eval shows precision is the binding constraint.
+
+**Read path P95 (cold cache):** < 2s for "what did Alex say about pricing in March."
+
+---
+
+## 7. Confirmation (Geomi)
+
+Geomi has two roles in the brain layer: the proactive "ghost genius" surface, and the confirmation mediator for LLM-proposed engram updates. The second role is the v8-Karpathy reconciliation: the LLM proposes, the user confirms, the user remains the wiki's authority.
+
+```rust
+trait Triggers {
+    fn pre_meeting_brief(&self, ev: &CalendarEvent) -> Result<Brief>;
+    fn mid_meeting_suggest(&self, ctx: &MeetingCtx) -> Result<Option<Suggestion>>;
+    fn end_of_day(&self) -> Result<EveningNudge>;
+
+    /// Pulls from the proposed_updates queue, formats one as a conversational
+    /// prompt, returns the user's verdict.
+    fn next_confirmation(&self) -> Result<Option<ConfirmationPrompt>>;
+    fn record_verdict(&self, p: &ProposedUpdateId, v: Verdict) -> Result<CommitId>;
+}
+
+enum Verdict {
+    Confirm,        // accept as-is, mark human-confirmed
+    Reject,         // drop the proposed update; field stays as it was
+    Modify(Value),  // user-rewritten value, mark human-edited
+    Defer,          // ask again later (stays in queue)
+}
+```
+
+**Example confirmation prompt:**
+
+> *"After today's meeting with Alex, I'd update his role line:
+> &nbsp;&nbsp;was: VP Eng at Acme · pushes timeline back, holds line on quality
+> &nbsp;&nbsp;now: VP Eng at Acme · willing to negotiate timeline if quality holds
+> From the 12:34 mark of today's call. Confirm?"*
+
+User says yes/no/modify; Geomi commits with the user as git author.
+
+**Ranking rule.** A `human_confirmed: true` claim outranks an unconfirmed auto-extracted claim during recall ranking. Confirmed engram fields outrank unconfirmed ones. The act of confirming is the encoding event.
+
+**Rate limits.** REQ-075 "ghost genius — never begs" applies to all proactive triggers AND to confirmations. Mid-meeting suggestions are negative-default, ≤1 per stage of the meeting, suppressed for the rest of the meeting once dismissed. Geomi never spams confirmations: ≤3 confirmation prompts per session; the rest defer to the Brain Inbox for batch review.
+
+---
+
+## 8. UX surfaces
+
+### 8.1 Memory landing — galaxy + time column + floating ask
+
+**Locked mockup:** `rachel-redesign/v4.3-memory-galaxy-floating-ask.html`.
+
+Three regions: galaxy (center, fills), time column (right, ~170px, always visible), floating ask (centered pill, absolute over galaxy). No bottom ribbon. No companion strip. No dedicated ask tray.
+
+**The galaxy.** One dot per meeting, positioned by clustering similarity (computed from its traces' centroid). Dot opacity encodes recency — older meetings fade. Cluster halos and small-caps italic-serif labels mark constellations (RAPTOR clusters). A faint vellum ring around a dot signals unconfirmed marginalia. Hover → small note card (date, title, two-line summary, attendees). **No file paths, no field labels, no cosine numbers, no model names** anywhere on the surface.
+
+**The time column.** Always-visible grouped list of natural human time scopes:
+- *recent* — this week · last week · this month · last month
+- *months · {current year}* — 4-column abbrev grid (jan ... dec); months past today render dimmer
+- *quarters* — Q1 · Q2 · Q3 · Q4
+- *years* — descending, 3–5 visible
+- *all time* — bottom row
+
+Tiny 1px-tall density sparklines beside *recent* and *years* rows. Active row gets a brand-teal pill.
+
+**Spotlight — the only landing gesture on time.** Click any row → that scope is active. Galaxy spotlights notes in scope (full opacity); others fade to ~0.15. **Cluster halos and labels stay put — the galaxy does not reorganize.** Breadcrumb at top: "*spotlight · february · 23 meetings*" with a × close pill. Click the same row again, click *all time*, click ×, or press ESC → release. Active scope is mutually exclusive.
+
+**The floating ask.** Pill bar (`border-radius: 999px`, blur backdrop), absolute-positioned `bottom: 18px; left: 50%; transform: translateX(-50%);`, centered within the galaxy column (does not extend under the time column). Translucent panel lets the warm-paper backdrop and active spotlights glow through. Carries: a small breathing Geomi dot, italic-serif placeholder ("*who, when, what do you want to remember?*"), blinking caret, send affordance. **The only ask field on the surface.**
+
+**The morning re-read banner.** When `proposed_updates` are pending, a quiet one-line banner above the galaxy: "*N marginalia awaiting your initials → review now.*" Routes into Brain Inbox. The only chrome the morning ritual gets on the landing.
+
+### 8.2 People lens — first-class to Phase 3
+
+People are a sibling lens to the galaxy, not a tab nested inside. The user opens a person via the floating ask or via a `people` rail (composition TBD by Rachel v5). A person view answers four queries directly as one page of Geomi-written prose with marginalia awaiting initials:
+
+| Query | Index used | LLM in loop? |
+|---|---|---|
+| **Who said what** | `sentence_index` filtered by `speaker = person`; grouped by meeting, sorted by date. | No (deterministic — passage text fetched from capture span). |
+| **Whose progress** | `sentence_index` filtered by `entity = person AND kind ∈ {observation, concern}`; time-ordered. | Yes — Stage 4 weaves the arc. |
+| **Who needs care** | `sentence_index` filtered by `entity = person AND kind = concern AND confirmed AND recency < 90d`. | Optional one-line "why this matters now." |
+| **Who committed** | `sentence_index` filtered by `(speaker = person OR mentioned = person) AND kind = commitment`. | No (two-column render: their commitments / my commitments). |
+
+Marginalia (Geomi-proposed updates not yet confirmed) appear inline with *Yes, remember that* / *Not yet* affordances — same vocabulary as the Brain Inbox (§8.3) but contextualized.
+
+**The killer-move — `time-scope × person-pin`.** With a person pinned, clicking any scope row resolves to a single-click attribution query: *"show me everything Alex said in February / in Q3 / this week."* The galaxy spotlights only this person's notes within that scope; the four-query view filters to that scope's slice.
+
+### 8.3 Brain Inbox
+
+Dedicated surface listing all `proposed_updates` since the last review.
+
+```
+Brain Inbox · 7 proposed updates from last night
+
+[ person/alex.md · role_line ]
+  Was: VP Eng at Acme · pushes timeline back, holds line on quality
+  Now: VP Eng at Acme · willing to negotiate timeline if quality holds
+  Why: 2026-05-04 Q3 Pricing meeting — Alex agreed to monthly experiment
+       (12:34-13:02)
+  [ Accept ] [ Reject ] [ Open engram ]
+```
+
+Per-field accept/reject. Accept → applies the update + marks `human_confirmed: true`. Reject → drops the proposed_update; no commit.
+
+### 8.4 Per-engram view
+
+- **Click-to-edit per field.** Frontmatter `value:` is the edited content. Save → `user_edit` API call → immediate git commit with `human_locked: true`, `authored_by: user`.
+- **Provenance badge per field.** `auto-extracted · 2 days ago · qwen-3-32b` (hover → source meeting + span) or `you edited · 22 Apr` (hover → revision history). Click badge → side drawer with full revision history.
+- **Per-field history.** Side-by-side diff or sentence-level highlight (strikethrough removed, underline added).
+- **Time-travel.** Each engram has a date slider; drag back → frontmatter at that moment via `read_engram_at`.
+- **One-click revert.** `revert_field` writes a new commit setting the field to a prior value.
+
+---
+
+## 9. Privacy
+
+- **No remote.** git repo is local-only. Backup is handled outside the brain layer.
+- **No cloud LLM** for synthesis by default. SnapGPU on spark1+spark2 over Tailscale.
+- **Audio not retained** by default (matches Granola). Transcripts kept; per-meeting deletion supported.
+- **No telemetry on memory contents.** Brain content is never reported.
+- **Path traversal hardened.** Every `EngramPath` validated: must start with `{persona.md, person/, topic/, meeting/}`; canonicalized; no `..`, no UNC, no symlink-out-of-repo. Implementation pattern from Claude Code's `src/memdir/paths.ts:109`.
+- **Sensitive flag.** Per-meeting `sensitive: true` excludes the meeting from non-local-LLM synthesis prompts and from Brain Inbox plaintext previews. Default: not sensitive.
+- **Encryption-at-rest:** deferred to Phase 4 (relies on FileVault for v8). Whole-repo encryption (`git-crypt` or APFS volume) is the chosen grain when added.
+
+---
+
+## 10. Phase 3 scope
+
+**In scope:**
+- Cortex — markdown engrams + git
+- Hippocampus — SQLite indexes + Brain API trait
+- Triggers — Geomi proactive surface + confirmation mediator
+- UX — Memory landing (galaxy + time column + floating ask), people lens, Brain Inbox, per-engram view
+- Acceptance against 24-persona corpus at ≥80%
+
+**Deferred:**
+- MCP server / Anthropic memory-tool wire format — reconsider post-launch
+- Encryption-at-rest — Phase 4
+- Multi-user shared brain — post-v8
+- Cross-source ingestion (Slack, email, docs) — post-v8
+- HippoRAG-2 recognition-filter re-ranker — graft only if eval shows precision is binding
+- MIRIX six-type taxonomy — current pivot taxonomy (name / date / concept) is sufficient
+
+---
+
+## 11. Acceptance
+
+**Persona corpus (REQ-070).** ≥58 / 72 queries pass all three sub-checks (≥80%):
+1. `pivot_type` correctly classified.
+2. `expected_dossier_card` fields produced (string-match against expected; semantic-equivalent OK).
+3. `expected_synthesis_themes` (3–4 themes) all appear in the synthesis output.
+
+Eval harness runs against `tests/eval-brain-memory/seed-data/`, scores each query, produces `tasks/eval-results-YYYY-MM-DD.md`.
+
+**Performance:**
+- Per-meeting consolidation: < 60s for a 30-minute meeting.
+- Nightly batch: < 5 min.
+- Read path P95 (cold cache): < 2s.
+
+**Privacy verification:**
+- Outbound network audit: per-meeting close + read path generates **zero outbound packets** to non-tailnet hosts in default config (verified via `pcap` capture).
+- Git audit completeness: every engram field's current value reachable via `read_engram_at(path, head)`; every prior value reachable via field history.
+
+---
+
+## 12. Open questions
+
+Genuinely unresolved at the time of locking. Each routes into SDD.
+
+1. **Sentence boundary detector** — punkt vs spaCy vs language-aware. CJK queries flagged in REQ-068 deferred to Phase 3.
+2. **Embedding model** — local-only narrows it. Candidates: `bge-m3` quantized via Metal, or repurposed whisper.cpp audio embeddings. Bench needed before SDD freeze.
+3. **Galaxy plotting unit** — confirmed: one dot per meeting, centroid of its traces. Sentence-level dots would smear at typical corpus size. Sentence-level retrieval is one click deep. *Confirm or push back.*
+4. **Topic-segmentation algorithm** — fixed 3-min windows vs LLM-decided breaks vs Bayesian-surprise (EM-LLM style). Default fixed-window for v8 simplicity; revisit if eval pressures.
+5. **Brain Inbox cadence** — daily prompt vs weekly digest with daily-updating count badge. One user-research conversation to confirm.
+6. **Working-memory size cap and rotation policy** — currently "rolling 14 days." May need hard token cap (4K?) with priority weighting (recent meetings + open commitments + active people).
+7. **Calendar integration scope** — Phase 3 minimum is pre-meeting brief trigger via calendar event lookup. Anything beyond is out.
+8. **Sensitive-meeting marking UX** — pre-meeting toggle, post-meeting flag, per-line redaction? Default: pre-meeting toggle with persistent annotation; per-line redaction is a later enhancement.
+9. **Tritanopia color-blind safety** — cluster colors not yet verified for tritanopia. Rachel v5 deliverable.
+10. **Floating-pill occlusion ergonomic** — when a spotlit cluster lights up dots directly under the floating ask, the pill can occlude. Two options: (a) bump pill opacity another notch on spotlight, (b) drift pill upward 30–40px. Currently static at 18px. Resolve in v5 or earlier user testing.
+11. **Meeting-engram body regeneration boundary** — frontmatter is authoritative (user-confirmed); body is regenerable from `raw/` on demand.
+12. **Person/topic-engram body regeneration boundary** — both frontmatter AND body authoritative. The user's confirmed wording on `person/alex.md` is itself the encoding (principle 2); not regenerable from traces alone.
+
+---
+
+## 13. References
+
+**Acceptance and requirements**
+- REQ-070 — Brain Memory v8 (`dialog-requirements.md` / Phase-3 inheritance from REQ-076 §2)
+- REQ-075 — Geomi companion model (`docs/geomi-concept.md`)
+- Acceptance corpus: `tests/eval-brain-memory/persona-corpus.yaml`
+
+**Locked mockups**
+- Memory landing: `rachel-redesign/v4.3-memory-galaxy-floating-ask.html`
+- People-lens mockup (Rachel v5): pending
+
+**Prior-art derivations** (one-line pointers; full reasoning in `docknote-memory-deepdive-tier1.md` / `tier2.md`)
+- Karpathy LLM Wiki gist — three-layer model (`raw/` + wiki + schema), three operations (ingest / query / lint), navigation files. Adopted shape and vocabulary; diverges on authority (LLM owns wiki → Geomi-mediated user confirmation).
+- Letta — sleep-time pattern + memory blocks.
+- Graphiti — bi-temporal schema discipline (kept for in-meeting frontmatter; rejected as a parallel facts table).
+- Granola — citation UX (kept). Encrypted-DB lockdown (counter-positioned against).
+- Minutes — frontmatter shape; tool naming.
+- mem0 — two-phase extract + reconcile.
+- MemMachine — keep-raw-as-ground-truth.
+- RAPTOR — synthesis substrate.
+- Cline / cursor memory bank — file taxonomy + read-on-every-turn discipline.
+- Claude Code memdir — path validation pattern (`src/memdir/paths.ts:109`); see `docknote-memory-learn-from-cc.md`.
+
+**Sibling projects in `~/seanslab/`**
+- **Memio** — wearable hardware-recorder substrate; chose entity-graph memory for 10-year horizon.
+- **askserver** — Jetson Orin research server; chose "less structure, more intelligence" (most aligned with our principle 1).
+- **BoscoV4** — household-NAS appliance; chose typed SQL tables for decisions/action_items (the Granola-shaped architecture v8 rejects). Reusable: citation-anchor schema (`citation_id / chunk_id / start_ms / end_ms / speaker_label / transcript_preview`) — adopt.
+
+---
+
+## 14. What's next
+
+Design-locked. Next deliverables are SDD-level:
+
+1. **Frontmatter schema spec** — exhaustive YAML schema per engram kind with validation rules. *Critical path.*
+2. **Prompt library** — extraction, update reconciler, sleep-time consolidation, synthesis, pivot router. Each with few-shot examples and failure-mode notes. *Critical path.*
+3. **`Hippocampus` trait module spec** — full Rust signatures, error types, contract documentation.
+4. **Eval harness spec** — 24-persona corpus run, scoring rubric, regression CI.
+5. **Geomi trigger heuristics** — concrete rules for `mid_meeting_suggest`, calibrated against real meeting samples.
+6. **Migration plan** — when v8 frontmatter changes in v9, what's the migration commit shape?
+
+Dispatch (1) and (2) first; everything else is gated on those.
