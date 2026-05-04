@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Docknote Memory — landing (v3)</title>
+<style>
+  /* ─── Tokens (verbatim, sdd-ui-tokens.md §12) ─────────────── */
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E5E1D6;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    /* book-skin warmth — only used for the masthead breath line + vellum stripe */
+    --vellum:       #F0E9D8;
+
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 40px;
+
+    --radius-sm:    6px;
+    --radius-md:    8px;
+    --radius-lg:   12px;
+    --radius-xl:   14px;
+    --radius-pill: 999px;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.18);
+
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --ease-out:    cubic-bezier(0.2, 0.7, 0.4, 1);
+
+    --serif: "Iowan Old Style", "Charter", "Georgia", serif;
+  }
+  body.dark {
+    --bg:           #1A1B1A;
+    --panel:        #232524;
+    --panel-soft:   #2A2C2B;
+    --ink:          #F2EFE7;
+    --ink-soft:     #BCB9B0;
+    --ink-faint:    #757269;
+    --rule:         #353634;
+
+    --brand:        #24dceb;
+    --brand-strong: #1bbfcb;
+    --brand-soft:   #1A353A;
+
+    --vellum:       #2D2A22;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 36px 32px 64px; }
+  .theme-toggle {
+    position: fixed; top: 20px; right: 20px;
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: var(--radius-pill); padding: 6px 12px;
+    font-size: 11px; color: var(--ink-soft);
+    cursor: pointer; font-family: inherit; z-index: 100;
+  }
+
+  /* ─── App frame ───────────────────────────────────────────── */
+  .app {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-modal);
+    height: 720px;
+    display: flex; flex-direction: column;
+  }
+  .titlebar {
+    height: 36px;
+    background: var(--panel-soft);
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center;
+    padding: 0 14px;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .titlebar .dot { width: 11px; height: 11px; border-radius: var(--radius-pill); background: var(--rule); }
+  .titlebar .wordmark {
+    margin-left: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .titlebar .wordmark .mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--brand); color: white;
+    font-weight: 700; font-size: 11px;
+  }
+  .workspace { flex: 1; display: flex; flex-direction: row; min-height: 0; }
+
+  /* ─── Sidebar (sidebar.css verbatim) ──────────────────────── */
+  .sidebar {
+    flex: 0 0 200px; width: 200px;
+    background: var(--panel-soft);
+    border-right: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .sidebar__inner {
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: var(--space-3) var(--space-2);
+    width: 200px;
+  }
+  .sidebar__group {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .sidebar__spacer { flex: 1 1 auto; }
+  .sidebar-row {
+    width: 100%;
+    height: 36px;
+    display: flex; align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sidebar-row[data-active='true'] {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+  .sidebar-row__icon {
+    width: 18px; height: 18px;
+    flex: 0 0 18px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sidebar-row__label { flex: 1 1 auto; }
+  .sidebar-row__hint {
+    font-size: 10px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .sidebar-row[data-placeholder='true'] { color: var(--ink-faint); }
+  .sidebar-plus {
+    width: 64px; height: 36px;
+    align-self: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--brand);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--brand-strong);
+    cursor: pointer;
+  }
+  .sidebar-plus__icon {
+    width: 14px; height: 14px;
+    fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ─── Memory pane ─────────────────────────────────────────── */
+  .memory {
+    flex: 1; min-width: 0;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+  }
+  .memory__inner {
+    flex: 1;
+    padding: 44px 56px 36px;
+    display: flex; flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+  }
+
+  /* Masthead — quiet, lowercase serif. The "book cover" */
+  .masthead {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .masthead::after {
+    /* faint vellum hairline beneath the rule — one breath of warmth, no skeuo */
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 1px; background: var(--vellum); opacity: 0.6;
+  }
+  .masthead__title {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    line-height: 1.1;
+    margin: 0;
+    font-style: italic;
+  }
+  .masthead__date {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  /* Geomi voice — the lead */
+  .reread {
+    display: flex; flex-direction: column;
+    gap: 14px;
+  }
+  .reread__lede {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 2px;
+  }
+  /* The breathing dot — Geomi present, not a panel */
+  .geomi {
+    width: 8px; height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    flex: 0 0 8px;
+    animation: breathe 4.2s var(--ease-out) infinite;
+    box-shadow: 0 0 0 0 rgba(27, 191, 203, 0.4);
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50%      { opacity: 1.00; transform: scale(1.15); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .geomi { animation: none; opacity: 0.85; }
+  }
+
+  /* Marginalia card — the ritual */
+  .marg {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    padding: 18px 22px 16px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+    /* the hairline-vellum stripe along the left — "you wrote this" */
+    border-left: 3px solid var(--vellum);
+  }
+  .marg__prose {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0;
+  }
+  .marg__prose em {
+    /* the brain's proposed words, set off softly */
+    font-style: italic;
+    color: var(--brand-strong);
+    font-weight: 500;
+  }
+  .marg__replies {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .reply {
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .reply--yes {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    font-weight: 600;
+  }
+  .reply--yes:hover { background: var(--brand); color: #fff; transform: translateY(-1px); }
+  .reply--no {
+    background: transparent;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .reply--no:hover { color: var(--ink); }
+  .marg__count {
+    margin-left: auto;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  /* The marginalia stack */
+  .marg-stack {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  /* Open-a-page input — single quiet line */
+  .open {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: var(--panel-soft);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-md);
+  }
+  .open__icon {
+    width: 16px; height: 16px;
+    flex: 0 0 16px;
+    fill: none; stroke: var(--ink-faint);
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .open__input {
+    flex: 1;
+    border: 0; outline: 0; background: transparent;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .open__input::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  /* Recent pages — prose-y list */
+  .recent {
+    display: flex; flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .recent__head {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 0 0 4px;
+  }
+  .recent__list {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column;
+  }
+  .recent__row {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-out);
+    border-radius: 4px;
+  }
+  .recent__row:last-child { border-bottom: 0; }
+  .recent__row:hover { background: var(--panel-soft); }
+  .recent__title {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink);
+    flex: 1;
+  }
+  .recent__title em {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+  .recent__when {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  /* designer commentary — outside the frame */
+  .commentary {
+    max-width: 720px;
+    margin: 32px auto 0;
+    padding: 0 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .commentary h2 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .commentary p { margin: 0 0 10px; }
+  .commentary .sig {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-faint);
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.body.classList.toggle('dark')">
+  toggle theme
+</button>
+
+<div class="page">
+
+  <div class="app">
+
+    <!-- Titlebar -->
+    <div class="titlebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="wordmark"><span class="mark">D</span> Docknote</span>
+    </div>
+
+    <div class="workspace">
+
+      <!-- Sidebar (Memory active) -->
+      <nav class="sidebar" aria-label="Primary">
+        <div class="sidebar__inner">
+          <ul class="sidebar__group">
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="6" y="3" width="13" height="16" rx="2"/><path d="M3 7v13a1 1 0 0 0 1 1h12"/><path d="M9 8h7M9 12h7M9 16h4"/></svg>
+              <span class="sidebar-row__label">Notes</span>
+            </a></li>
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+              <span class="sidebar-row__label">Whispers</span>
+            </a></li>
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1.5"/><path d="M5.5 7.5l1.5 1.5L9 7"/><path d="M13 6h8M13 12h8M13 18h8"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              <span class="sidebar-row__label">Todos</span>
+            </a></li>
+            <li><a class="sidebar-row" data-active="true">
+              <!-- An open book glyph; calmer than a brain icon -->
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H11v15H4.5A1.5 1.5 0 0 1 3 17.5z"/><path d="M21 5.5A1.5 1.5 0 0 0 19.5 4H13v15h6.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M11 4v15M13 4v15"/></svg>
+              <span class="sidebar-row__label">Memory</span>
+            </a></li>
+            <li><a class="sidebar-row" data-placeholder="true">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+              <span class="sidebar-row__label">HiDock</span>
+              <span class="sidebar-row__hint">no device</span>
+            </a></li>
+          </ul>
+          <div class="sidebar__spacer"></div>
+          <button class="sidebar-plus" aria-label="Import audio file">
+            <svg class="sidebar-plus__icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div class="sidebar__spacer"></div>
+          <ul class="sidebar__group">
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              <span class="sidebar-row__label">Settings</span>
+            </a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Memory landing -->
+      <main class="memory">
+        <div class="memory__inner">
+
+          <!-- Masthead: the book cover, in a sentence -->
+          <header class="masthead">
+            <h1 class="masthead__title">the book, this morning</h1>
+            <span class="masthead__date">monday, 4 may</span>
+          </header>
+
+          <!-- The morning re-read — lede + three marginalia -->
+          <section class="reread" aria-label="Marginalia awaiting your initials">
+            <p class="reread__lede">
+              <span class="geomi" aria-hidden="true"></span>
+              three things from yesterday, waiting for your initials.
+            </p>
+
+            <div class="marg-stack">
+
+              <article class="marg">
+                <p class="marg__prose">
+                  After today's visit, I'd add <em>"reports new dizziness on standing, otherwise stable"</em> to Mrs. Chen's current concerns. Confirm?
+                </p>
+                <div class="marg__replies">
+                  <button class="reply reply--yes">Yes, remember that</button>
+                  <button class="reply reply--no">Not yet</button>
+                  <span class="marg__count">1 of 3</span>
+                </div>
+              </article>
+
+              <article class="marg">
+                <p class="marg__prose">
+                  Mr. Okafor mentioned his daughter is starting med school in Lagos — worth keeping on his page so you can ask after her next time?
+                </p>
+                <div class="marg__replies">
+                  <button class="reply reply--yes">Yes, remember that</button>
+                  <button class="reply reply--no">Not yet</button>
+                  <span class="marg__count">2 of 3</span>
+                </div>
+              </article>
+
+              <article class="marg">
+                <p class="marg__prose">
+                  The lisinopril hold for Ms. Reyes — was that for the full week, or just until the BMP returns? I'd note <em>"hold pending Tuesday labs"</em> unless you'd phrase it differently.
+                </p>
+                <div class="marg__replies">
+                  <button class="reply reply--yes">Yes, remember that</button>
+                  <button class="reply reply--no">Not yet</button>
+                  <span class="marg__count">3 of 3</span>
+                </div>
+              </article>
+
+            </div>
+          </section>
+
+          <!-- Open a page — one quiet input -->
+          <section class="open" aria-label="Open a page">
+            <svg class="open__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+            </svg>
+            <input class="open__input" type="text" placeholder="open a page — by name, or a date you want to revisit&hellip;" />
+          </section>
+
+          <!-- Recent pages -->
+          <section class="recent" aria-label="Recently touched pages">
+            <p class="recent__head">recently turned to</p>
+            <ul class="recent__list">
+              <li class="recent__row">
+                <span class="recent__title">Mrs. Chen <em>— what we know, after sixteen visits</em></span>
+                <span class="recent__when">an hour ago</span>
+              </li>
+              <li class="recent__row">
+                <span class="recent__title">Mr. Okafor <em>— a quiet patient who mentions things in passing</em></span>
+                <span class="recent__when">yesterday</span>
+              </li>
+              <li class="recent__row">
+                <span class="recent__title">Ms. Reyes <em>— hypertension, work in progress</em></span>
+                <span class="recent__when">yesterday</span>
+              </li>
+              <li class="recent__row">
+                <span class="recent__title">Friday clinic, 1 May <em>— the afternoon</em></span>
+                <span class="recent__when">friday</span>
+              </li>
+            </ul>
+          </section>
+
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- Designer commentary, outside the frame -->
+  <aside class="commentary">
+    <h2>notes from the designer</h2>
+    <p>
+      The masthead is a sentence, not a header. <em>The book, this morning.</em> No surface name in CAPS, no badge, no "Memory v8" — the user already clicked Memory in the sidebar. Principle 1: the title is what the page <em>is</em>, in plain words.
+    </p>
+    <p>
+      The lede is the morning re-read because principle 2 says it has to be. Three marginalia in serif prose, two replies each — <em>Yes, remember that</em> is the encoding event. No field paths, no diff cards, no model name. Geomi is the breathing dot, present in the sentence, not boxed into a panel.
+    </p>
+    <p>
+      "Open a page" is one italic line. Recent pages read like spines on a shelf — name, then a phrase of what's inside, never a path. The book metaphor stays felt, not literal: a single vellum hairline under the masthead and a 3px stripe down the left edge of each marginalia card. That is all the skeuomorphism the page earns.
+    </p>
+    <p class="sig">— Rachel · 4 May 2026</p>
+  </aside>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Docknote Memory — galaxy + floating ask bar (v4.3)</title>
+<style>
+  /* ─── Tokens (sdd-ui-tokens §12) ──────────────────────────── */
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E5E1D6;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --vellum:       #F0E9D8;
+
+    /* Cluster palette — verbatim from cluster-to-notes-fly.html */
+    --c-eng:      #5B9292;
+    --c-mkt:      #B8893E;
+    --c-sales:    #C97070;
+    --c-acme:     #8A7DB8;
+    --c-v3:       #7A9479;
+    --c-1on1:     #C97A6E;
+    --c-research: #6B8AB8;
+    --c-design:   #C99363;
+
+    --space-1:  4px;  --space-2:  8px;  --space-3: 12px;
+    --space-4: 16px;  --space-5: 20px;  --space-6: 24px;
+    --space-7: 32px;  --space-8: 40px;
+
+    --radius-sm:    6px;  --radius-md:    8px;
+    --radius-lg:   12px;  --radius-xl:   14px;
+    --radius-pill: 999px;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.18);
+    --shadow-card:  0 8px 24px -10px rgba(0,0,0,0.12);
+
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --ease-out:    cubic-bezier(0.2, 0.7, 0.4, 1);
+
+    --serif: "Iowan Old Style", "Charter", "Georgia", serif;
+  }
+  body.dark {
+    --bg:           #1A1B1A;
+    --panel:        #232524;
+    --panel-soft:   #2A2C2B;
+    --ink:          #F2EFE7;
+    --ink-soft:     #BCB9B0;
+    --ink-faint:    #757269;
+    --rule:         #353634;
+
+    --brand:        #24dceb;
+    --brand-strong: #1bbfcb;
+    --brand-soft:   #1A353A;
+
+    --vellum:       #2D2A22;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.55);
+    --shadow-card:  0 14px 36px -12px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1320px; margin: 0 auto; padding: 36px 28px 64px; }
+
+  .theme-toggle {
+    position: fixed; top: 20px; right: 20px;
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: var(--radius-pill); padding: 6px 12px;
+    font-size: 11px; color: var(--ink-soft);
+    cursor: pointer; font-family: inherit; z-index: 100;
+  }
+
+  /* ─── App frame ───────────────────────────────────────────── */
+  .app {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-modal);
+    height: 820px;
+    display: flex; flex-direction: column;
+  }
+  .titlebar {
+    height: 36px;
+    background: var(--panel-soft);
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 6px; flex-shrink: 0;
+  }
+  .titlebar .dot {
+    width: 11px; height: 11px;
+    border-radius: var(--radius-pill);
+    background: var(--rule);
+  }
+  .titlebar .dot.r { background: #ED6A5E; }
+  .titlebar .dot.y { background: #F5BF4F; }
+  .titlebar .dot.g { background: #61C554; }
+  .titlebar .wordmark {
+    margin-left: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .titlebar .wordmark .mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--brand); color: white;
+    font-weight: 700; font-size: 11px;
+  }
+
+  .workspace { flex: 1; display: flex; flex-direction: row; min-height: 0; }
+
+  /* ─── Sidebar (sidebar.css verbatim) ──────────────────────── */
+  .sidebar {
+    flex: 0 0 200px; width: 200px;
+    background: var(--panel-soft);
+    border-right: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .sidebar__inner {
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: var(--space-3) var(--space-2);
+    width: 200px;
+  }
+  .sidebar__group {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .sidebar__spacer { flex: 1 1 auto; }
+  .sidebar-row {
+    width: 100%;
+    height: 36px;
+    display: flex; align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sidebar-row:hover { background: var(--panel); color: var(--ink); }
+  .sidebar-row[data-active='true'] {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+  .sidebar-row__icon {
+    width: 18px; height: 18px;
+    flex: 0 0 18px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sidebar-row__label { flex: 1 1 auto; }
+  .sidebar-plus {
+    width: 64px; height: 36px;
+    align-self: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--brand);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--brand-strong);
+    cursor: pointer;
+  }
+  .sidebar-plus__icon {
+    width: 14px; height: 14px;
+    fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ─── Center column (galaxy fills, ask bar floats over it) ── */
+  .center-col {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    background: var(--bg);
+    position: relative;
+  }
+  .galaxy-pane {
+    flex: 1; min-height: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .galaxy-pane::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(1100px 700px at 58% 46%, rgba(245,236,214,0.55), rgba(247,245,239,0) 70%),
+      radial-gradient(700px 460px at 18% 78%, rgba(232,225,206,0.35), rgba(247,245,239,0) 70%);
+    pointer-events: none;
+  }
+  body.dark .galaxy-pane::before {
+    background:
+      radial-gradient(1100px 700px at 58% 46%, rgba(45,42,34,0.55), rgba(26,27,26,0) 70%),
+      radial-gradient(700px 460px at 18% 78%, rgba(35,33,28,0.45), rgba(26,27,26,0) 70%);
+  }
+
+  /* ─── Breadcrumb (top of galaxy when scope active) ────────── */
+  .breadcrumb {
+    position: absolute; top: 16px; left: 24px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 6px 6px 14px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-card);
+    z-index: 6;
+    font-family: var(--serif); font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 200ms var(--ease-out),
+                transform 200ms var(--ease-out);
+  }
+  body.dark .breadcrumb { background: rgba(35,37,36,0.78); }
+  .breadcrumb.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .breadcrumb b {
+    font-style: normal; font-weight: 500; color: var(--ink);
+    font-variant: small-caps; letter-spacing: 0.06em;
+  }
+  .breadcrumb .sep { color: var(--ink-faint); }
+  .breadcrumb .count { color: var(--ink-faint); }
+  .breadcrumb__close {
+    margin-left: 4px;
+    width: 22px; height: 22px;
+    border: 0;
+    background: var(--panel-soft);
+    color: var(--ink-faint);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1;
+    transition: color var(--duration-fast) var(--ease-out),
+                background var(--duration-fast) var(--ease-out);
+  }
+  .breadcrumb__close:hover { color: var(--ink); background: var(--vellum); }
+
+  /* ─── Galaxy SVG ──────────────────────────────────────────── */
+  .galaxy-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    z-index: 2;
+  }
+  .halo {
+    fill: currentColor;
+    opacity: 0.10;
+    filter: blur(14px);
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+  body.dark .halo { opacity: 0.16; }
+  .cluster-label {
+    font-family: var(--serif);
+    font-size: 11px;
+    font-style: italic;
+    font-variant: small-caps;
+    letter-spacing: 0.10em;
+    fill: var(--ink-soft);
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+  .cluster-label.dim { fill: var(--ink-faint); }
+  .note {
+    cursor: pointer;
+    transition: r var(--duration-fast) var(--ease-out),
+                opacity var(--duration-base) var(--ease-out),
+                transform var(--duration-base) var(--ease-out);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .note:hover { opacity: 1 !important; }
+  .note-mark { transition: opacity var(--duration-base) var(--ease-out); }
+  .galaxy-svg.spotlight .note { opacity: 0.15 !important; }
+  .galaxy-svg.spotlight .note.in-scope { opacity: 1 !important; }
+  .galaxy-svg.spotlight .web { stroke-opacity: 0.07; }
+  .galaxy-svg.spotlight .note-mark { opacity: 0.25 !important; }
+  .note.lifted {
+    stroke: var(--brand-strong);
+    stroke-width: 1.6;
+    stroke-opacity: 1;
+    transform: scale(1.6);
+    filter: drop-shadow(0 0 6px rgba(27,191,203,0.45));
+  }
+  .web {
+    stroke: currentColor;
+    stroke-opacity: 0.18;
+    stroke-width: 0.7;
+    fill: none;
+    transition: stroke-opacity var(--duration-base) var(--ease-out);
+  }
+  body.dark .web { stroke-opacity: 0.22; }
+
+  /* ─── Floating ask bar (bottom-bar.html pattern, verbatim shape)
+         Lives inside .galaxy-pane, centered, hovering over the galaxy.
+         Pill, soft shadow, blur backdrop, ~18px bottom offset. ────── */
+  .askbar {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-pill);
+    padding: 7px 12px 7px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow:
+      0 18px 40px -16px rgba(0,0,0,0.20),
+      0 4px 12px -4px rgba(0,0,0,0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 40;
+    /* Constrain so the pill never drifts under the time column;
+       galaxy column already excludes the 170px time column, this
+       is just the inner safe inset. */
+    max-width: calc(100% - 48px);
+    /* Slight panel translucency so the warm-paper glow shows through
+       and the pill feels of-the-galaxy rather than glued on. */
+    background: rgba(255,255,255,0.88);
+  }
+  body.dark .askbar {
+    background: rgba(35,37,36,0.78);
+    box-shadow:
+      0 18px 40px -16px rgba(0,0,0,0.55),
+      0 4px 12px -4px rgba(0,0,0,0.32);
+  }
+
+  .askbar__left {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--ink-faint);
+    padding-right: 12px;
+    border-right: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  .askbar__geomi {
+    width: 9px; height: 9px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    flex: 0 0 9px;
+    animation: breathe 4.2s var(--ease-out) infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50%      { opacity: 1.00; transform: scale(1.15); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .askbar__geomi { animation: none; opacity: 0.85; }
+  }
+  .askbar__left .label {
+    font-family: var(--serif); font-style: italic;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .askbar__center {
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+    min-width: 360px;
+  }
+  .askbar__input {
+    flex: 1;
+    border: 0; outline: 0; background: transparent;
+    font-family: var(--serif); font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .askbar__input::placeholder { color: var(--ink-faint); font-style: italic; }
+  .askbar__caret {
+    width: 6px; height: 14px; background: var(--brand);
+    border-radius: 1px; flex-shrink: 0;
+    animation: askbar-blink 1s steps(2) infinite;
+  }
+  @keyframes askbar-blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .askbar__caret { animation: none; opacity: 0.6; }
+  }
+  .askbar__send {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--brand); color: white;
+    border: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer;
+    flex-shrink: 0;
+  }
+  .askbar__send:hover { background: var(--brand-strong); }
+
+  /* ─── Right column: vertical time selector ────────────────── */
+  .timecol {
+    flex: 0 0 170px; width: 170px;
+    background: var(--panel-soft);
+    border-left: 1px solid var(--rule);
+    overflow-y: auto;
+    padding: 18px 12px 18px 14px;
+    display: flex; flex-direction: column;
+    gap: 18px;
+    user-select: none;
+  }
+  .timecol__group { display: flex; flex-direction: column; gap: 4px; }
+  .timecol__head {
+    font-family: var(--serif); font-style: italic;
+    font-variant: small-caps; letter-spacing: 0.10em;
+    font-size: 11px; color: var(--ink-faint);
+    padding: 0 4px 4px;
+    margin: 0;
+  }
+  .trow {
+    display: flex; align-items: center;
+    gap: 8px;
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--serif); font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    line-height: 1.3;
+    transition: background var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out);
+  }
+  .trow:hover { color: var(--ink); background: var(--panel); }
+  .trow.active {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+  .trow.future {
+    color: var(--ink-faint);
+    opacity: 0.55;
+    cursor: default;
+  }
+  .trow.future:hover { background: transparent; color: var(--ink-faint); }
+  .trow__label { flex: 1; }
+  .trow__spark {
+    flex: 0 0 28px; height: 6px;
+    display: flex; align-items: flex-end; gap: 1px;
+  }
+  .trow__spark span {
+    flex: 1;
+    background: currentColor;
+    opacity: 0.35;
+    border-radius: 1px;
+    min-height: 1px;
+  }
+  .trow.active .trow__spark span { opacity: 0.75; }
+
+  /* months: 4-column grid, compact */
+  .timecol__months {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+  .mrow {
+    padding: 5px 0;
+    text-align: center;
+    border-radius: var(--radius-md);
+    font-family: var(--serif); font-style: italic;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    transition: background var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out);
+  }
+  .mrow:hover { color: var(--ink); background: var(--panel); }
+  .mrow.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .mrow.future { color: var(--ink-faint); opacity: 0.45; cursor: default; }
+  .mrow.future:hover { background: transparent; color: var(--ink-faint); }
+
+  /* quarters: row of 4 */
+  .timecol__quarters {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  }
+  .qrow {
+    padding: 5px 0;
+    text-align: center;
+    border-radius: var(--radius-pill);
+    font-family: var(--serif); font-style: italic;
+    font-variant: small-caps; letter-spacing: 0.05em;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    transition: background var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out);
+  }
+  .qrow:hover { color: var(--ink); background: var(--panel); }
+  .qrow.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .qrow.future { color: var(--ink-faint); opacity: 0.45; cursor: default; }
+  .qrow.future:hover { background: transparent; color: var(--ink-faint); }
+
+  .timecol__divider {
+    height: 1px; background: var(--rule);
+    margin: 4px 0;
+    opacity: 0.7;
+  }
+
+  .alltime {
+    align-self: stretch;
+    padding: 6px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--serif); font-style: italic;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    background: transparent;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out),
+                background var(--duration-fast) var(--ease-out);
+  }
+  .alltime:hover { color: var(--ink-soft); background: var(--panel); }
+  .alltime.active { color: var(--brand-strong); background: var(--brand-soft); }
+
+  /* ─── Designer commentary ─────────────────────────────────── */
+  .commentary {
+    margin-top: 28px;
+    max-width: 880px;
+    color: var(--ink-soft);
+    font-size: 13.5px; line-height: 1.65;
+  }
+  .commentary h2 {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--ink-faint);
+    margin: 0 0 8px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+  .commentary p { margin: 0 0 10px; }
+  .commentary .sig {
+    font-family: var(--serif); font-style: italic;
+    color: var(--ink-faint); margin-top: 10px;
+  }
+  .commentary em { font-style: italic; color: var(--ink); }
+  .commentary kbd {
+    font-family: var(--serif); font-style: italic;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--vellum);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.body.classList.toggle('dark')">
+  toggle dark
+</button>
+
+<div class="page">
+
+  <div class="app">
+
+    <!-- Titlebar -->
+    <div class="titlebar">
+      <span class="dot r"></span>
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+      <span class="wordmark">
+        <span class="mark">D</span>
+        <span>Docknote</span>
+      </span>
+    </div>
+
+    <!-- Workspace: sidebar + center + time column -->
+    <div class="workspace">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar__inner">
+          <ul class="sidebar__group" role="list">
+            <li>
+              <button class="sidebar-row">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h7M9 13h7M9 17h5"/></svg>
+                <span class="sidebar-row__label">Notes</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar-row">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><path d="M5 9c0-2 2-4 4-4h6c2 0 4 2 4 4v3c0 2-2 4-4 4h-2l-3 3v-3H9c-2 0-4-2-4-4z"/></svg>
+                <span class="sidebar-row__label">Whispers</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar-row">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                <span class="sidebar-row__label">Todos</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar-row" data-active="true">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg>
+                <span class="sidebar-row__label">Memory</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar-row">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M10 8h4M10 12h4M10 16h2"/></svg>
+                <span class="sidebar-row__label">HiDock</span>
+              </button>
+            </li>
+          </ul>
+
+          <div class="sidebar__spacer"></div>
+
+          <button class="sidebar-plus" title="import">
+            <svg class="sidebar-plus__icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+
+          <div class="sidebar__spacer"></div>
+
+          <ul class="sidebar__group" role="list">
+            <li>
+              <button class="sidebar-row">
+                <svg class="sidebar-row__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12c0 .5-.06 1-.16 1.46l1.7 1.32-2 3.46-2-.82a7 7 0 0 1-2.54 1.46l-.3 2.12h-4l-.3-2.12a7 7 0 0 1-2.54-1.46l-2 .82-2-3.46 1.7-1.32A7 7 0 0 1 5 12c0-.5.06-1 .16-1.46l-1.7-1.32 2-3.46 2 .82a7 7 0 0 1 2.54-1.46L10.3 3h4l.3 2.12a7 7 0 0 1 2.54 1.46l2-.82 2 3.46-1.7 1.32c.1.46.16.96.16 1.46z"/></svg>
+                <span class="sidebar-row__label">Settings</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Center: galaxy + ask bar -->
+      <main class="center-col" aria-label="Memory galaxy">
+
+        <div class="galaxy-pane">
+
+          <!-- Breadcrumb (hidden until a scope is active) -->
+          <div class="breadcrumb" id="breadcrumb" role="status">
+            <span class="sep">spotlight</span>
+            <span class="sep">·</span>
+            <b id="bc-name">february</b>
+            <span class="sep">·</span>
+            <span class="count" id="bc-count">0 notes</span>
+            <button class="breadcrumb__close" id="bc-close" aria-label="release scope" title="release · esc">×</button>
+          </div>
+
+          <!-- Galaxy SVG -->
+          <svg class="galaxy-svg" viewBox="0 0 1100 760" preserveAspectRatio="xMidYMid meet" aria-hidden="false">
+
+            <!-- ============ HALOS ============ -->
+            <g style="color: #5B9292"><ellipse class="halo" cx="305" cy="290" rx="135" ry="98"/></g>
+            <g style="color: #8A7DB8"><ellipse class="halo" cx="640" cy="245" rx="120" ry="86"/></g>
+            <g style="color: #6B8AB8"><ellipse class="halo" cx="900" cy="320" rx="118" ry="92"/></g>
+            <g style="color: #B8893E"><ellipse class="halo" cx="155" cy="560" rx="110" ry="86"/></g>
+            <g style="color: #C97A6E"><ellipse class="halo" cx="430" cy="520" rx="120" ry="80"/></g>
+            <g style="color: #C97070"><ellipse class="halo" cx="730" cy="540" rx="115" ry="80"/></g>
+            <g style="color: #C99363"><ellipse class="halo" cx="970" cy="610" rx="92" ry="68"/></g>
+            <g style="color: #7A9479"><ellipse class="halo" cx="500" cy="170" rx="86" ry="60"/></g>
+
+            <!-- ============ INTRA-CLUSTER WEBS ============ -->
+            <g style="color: #5B9292" class="web">
+              <path d="M225 250 L280 270 L320 240 L370 280 L335 320 L270 340 L225 290 Z"/>
+              <path d="M280 270 L335 320 M320 240 L290 200 L260 240"/>
+              <path d="M370 280 L405 245 L380 215"/>
+            </g>
+            <g style="color: #8A7DB8" class="web">
+              <path d="M580 215 L620 200 L680 215 L710 250 L675 295 L615 295 L580 260 Z"/>
+              <path d="M620 200 L675 295 M680 215 L645 250 L615 295"/>
+            </g>
+            <g style="color: #6B8AB8" class="web">
+              <path d="M830 290 L880 270 L935 285 L970 320 L945 365 L890 375 L840 345 Z"/>
+              <path d="M880 270 L945 365 M935 285 L905 320 L890 375"/>
+            </g>
+            <g style="color: #B8893E" class="web">
+              <path d="M95 540 L145 525 L195 540 L215 580 L180 615 L120 605 L85 580 Z"/>
+              <path d="M145 525 L180 615 M195 540 L155 575 L120 605"/>
+            </g>
+            <g style="color: #C97A6E" class="web">
+              <path d="M360 510 L410 495 L470 510 L500 540 L470 575 L410 575 L360 545 Z"/>
+              <path d="M410 495 L470 575 M470 510 L430 540 L410 575"/>
+            </g>
+            <g style="color: #C97070" class="web">
+              <path d="M665 525 L710 510 L770 525 L795 555 L770 590 L710 590 L665 560 Z"/>
+              <path d="M710 510 L770 590 M770 525 L735 555 L710 590"/>
+            </g>
+            <g style="color: #C99363" class="web">
+              <path d="M925 595 L965 585 L1005 600 L1010 625 L975 645 L935 635 L920 615 Z"/>
+            </g>
+            <g style="color: #7A9479" class="web">
+              <path d="M455 160 L495 150 L535 165 L545 185 L515 200 L470 195 Z"/>
+            </g>
+
+            <!-- ============ NOTES (dots) ============ -->
+            <!-- data-month + data-year + data-day, dataset spans jun 2025 → apr 2026 -->
+
+            <!-- Engineering cluster (teal) -->
+            <g style="color: #5B9292" id="g-eng">
+              <circle class="note" data-month="jun" data-year="2025" data-day="14" data-meeting="jun 14 · sprint kickoff · with d. park, k. liu" cx="225" cy="250" r="3.5" fill="currentColor" opacity="0.45"/>
+              <circle class="note" data-month="jul" data-year="2025" data-day="42" data-meeting="jul 11 · platform retro · with eng team" cx="260" cy="240" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="aug" data-year="2025" data-day="80" data-meeting="aug 18 · bus-factor review · with d. park" cx="290" cy="200" r="4" fill="currentColor" opacity="0.85"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="105" data-meeting="sep 12 · infra cost burn · with j. ortiz" cx="320" cy="240" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="135" data-meeting="oct 12 · v3 architecture lock · with eng team" cx="280" cy="270" r="5" fill="currentColor" opacity="0.95"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="165" data-meeting="nov 11 · oncall pager review · with j. ortiz, d. park" cx="335" cy="320" r="4" fill="currentColor" opacity="0.85"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="195" data-meeting="dec 11 · holiday freeze plan · with eng team" cx="370" cy="280" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="220" data-meeting="jan 5 · 2026 roadmap · with d. park" cx="405" cy="245" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="232" data-meeting="jan 17 · auth refactor scoping · with j. ortiz" cx="380" cy="215" r="3" fill="currentColor" opacity="0.45"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="252" data-meeting="feb 6 · perf budget · with eng team" cx="270" cy="340" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="261" data-meeting="feb 15 · staging cutover · with d. park" cx="225" cy="290" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="285" data-meeting="mar 10 · vendor security review · with j. ortiz" cx="200" cy="320" r="3" fill="currentColor" opacity="0.4"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="312" data-meeting="apr 7 · q2 planning · with eng team" cx="305" cy="360" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle cx="280" cy="270" r="8" class="note-mark" fill="none" stroke="#F0E9D8" stroke-width="1.4" opacity="0.85"/>
+            </g>
+
+            <!-- ACME deal cluster (lavender) -->
+            <g style="color: #8A7DB8" id="g-acme">
+              <circle class="note" data-month="aug" data-year="2025" data-day="74" data-meeting="aug 12 · acme intro call · with k. liu, mrs. chen" cx="580" cy="215" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="98" data-meeting="sep 5 · acme discovery · with k. liu" cx="620" cy="200" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="328" data-meeting="apr 28 · acme pricing pushback · with k. liu, d. park" cx="645" cy="250" r="5" fill="currentColor" opacity="1"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="138" data-meeting="oct 15 · acme demo · with k. liu, mrs. chen" cx="680" cy="215" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="172" data-meeting="nov 18 · acme legal redline · with k. liu" cx="710" cy="250" r="3.5" fill="currentColor" opacity="0.8"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="225" data-meeting="jan 10 · acme renewal terms · with k. liu" cx="675" cy="295" r="3.5" fill="currentColor" opacity="0.75"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="258" data-meeting="feb 12 · mrs. chen — follow-up visit · with k. liu" cx="615" cy="295" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="290" data-meeting="mar 15 · acme exec sync · with k. liu, mrs. chen" cx="580" cy="260" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="jun" data-year="2025" data-day="22" data-meeting="jun 22 · acme prospect kickoff · with k. liu" cx="600" cy="170" r="3" fill="currentColor" opacity="0.4"/>
+              <circle class="note" data-month="jul" data-year="2025" data-day="50" data-meeting="jul 19 · acme champion call · with mrs. chen" cx="700" cy="180" r="3" fill="currentColor" opacity="0.45"/>
+              <circle cx="645" cy="250" r="8.5" class="note-mark" fill="none" stroke="#F0E9D8" stroke-width="1.4" opacity="0.9"/>
+            </g>
+
+            <!-- Research cluster (steel-blue) -->
+            <g style="color: #6B8AB8" id="g-research">
+              <circle class="note" data-month="jun" data-year="2025" data-day="8" data-meeting="jun 8 · user research kickoff · with t. nakamura" cx="830" cy="290" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="jul" data-year="2025" data-day="38" data-meeting="jul 7 · diary study debrief · with t. nakamura" cx="870" cy="265" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="aug" data-year="2025" data-day="68" data-meeting="aug 6 · usability round 1 · with t. nakamura, r. shah" cx="905" cy="320" r="4" fill="currentColor" opacity="0.9"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="100" data-meeting="sep 7 · usability round 2 · with t. nakamura" cx="935" cy="285" r="3.5" fill="currentColor" opacity="0.75"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="130" data-meeting="oct 7 · synthesis workshop · with t. nakamura, r. shah" cx="970" cy="320" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="160" data-meeting="nov 6 · persona refresh · with r. shah" cx="945" cy="365" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="190" data-meeting="dec 6 · q4 readout · with t. nakamura" cx="890" cy="375" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="218" data-meeting="jan 3 · jtbd interviews · with r. shah" cx="840" cy="345" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="248" data-meeting="feb 2 · concept test · with t. nakamura" cx="800" cy="320" r="3" fill="currentColor" opacity="0.4"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="269" data-meeting="feb 23 · diary follow-ups · with r. shah" cx="855" cy="395" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="295" data-meeting="mar 20 · accessibility audit · with t. nakamura" cx="985" cy="265" r="3" fill="currentColor" opacity="0.45"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="318" data-meeting="apr 13 · q2 research plan · with t. nakamura, r. shah" cx="920" cy="240" r="3" fill="currentColor" opacity="0.4"/>
+            </g>
+
+            <!-- Marketing cluster (ochre) -->
+            <g style="color: #B8893E" id="g-mkt">
+              <circle class="note" data-month="jul" data-year="2025" data-day="40" data-meeting="jul 9 · brand workshop · with s. okafor" cx="95" cy="540" r="3" fill="currentColor" opacity="0.45"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="108" data-meeting="sep 15 · launch narrative · with s. okafor, k. liu" cx="120" cy="605" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="132" data-meeting="oct 9 · press kit review · with s. okafor" cx="145" cy="525" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="170" data-meeting="nov 16 · webinar plan · with s. okafor" cx="155" cy="575" r="4" fill="currentColor" opacity="0.85"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="228" data-meeting="jan 13 · q1 campaign · with s. okafor" cx="180" cy="615" r="3.5" fill="currentColor" opacity="0.75"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="256" data-meeting="feb 10 · acme co-marketing · with s. okafor, k. liu" cx="195" cy="540" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="282" data-meeting="mar 7 · website refresh · with s. okafor" cx="215" cy="580" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="298" data-meeting="mar 23 · analyst briefing · with s. okafor" cx="85" cy="580" r="3" fill="currentColor" opacity="0.4"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="320" data-meeting="apr 15 · q2 launch plan · with s. okafor" cx="135" cy="640" r="3" fill="currentColor" opacity="0.5"/>
+            </g>
+
+            <!-- 1:1s cluster (terracotta) -->
+            <g style="color: #C97A6E" id="g-1on1">
+              <circle class="note" data-month="jul" data-year="2025" data-day="44" data-meeting="jul 13 · 1:1 with d. park" cx="360" cy="510" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="aug" data-year="2025" data-day="72" data-meeting="aug 10 · 1:1 with k. liu" cx="395" cy="490" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="102" data-meeting="sep 9 · 1:1 with d. park" cx="430" cy="500" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="324" data-meeting="apr 24 · d. park career conversation · with d. park" cx="430" cy="540" r="5" fill="currentColor" opacity="1"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="134" data-meeting="oct 11 · 1:1 with k. liu" cx="470" cy="510" r="3.5" fill="currentColor" opacity="0.75"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="164" data-meeting="nov 10 · 1:1 with d. park" cx="500" cy="540" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="194" data-meeting="dec 10 · 1:1 with k. liu" cx="470" cy="575" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="222" data-meeting="jan 7 · 1:1 with d. park" cx="410" cy="575" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="265" data-meeting="feb 19 · 1:1 with j. ortiz" cx="370" cy="555" r="3" fill="currentColor" opacity="0.45"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="270" data-meeting="feb 24 · 1:1 with k. liu" cx="345" cy="535" r="3" fill="currentColor" opacity="0.4"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="287" data-meeting="mar 12 · 1:1 with d. park" cx="510" cy="500" r="3" fill="currentColor" opacity="0.5"/>
+            </g>
+
+            <!-- Sales cluster (rose) -->
+            <g style="color: #C97070" id="g-sales">
+              <circle class="note" data-month="jun" data-year="2025" data-day="18" data-meeting="jun 18 · pipeline review · with k. liu" cx="665" cy="525" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="aug" data-year="2025" data-day="78" data-meeting="aug 16 · bdr training · with k. liu" cx="695" cy="500" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="110" data-meeting="sep 17 · forecast call · with k. liu" cx="710" cy="510" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="316" data-meeting="apr 11 · q1 close review · with k. liu, d. park" cx="735" cy="555" r="4" fill="currentColor" opacity="0.95"/>
+              <circle class="note" data-month="oct" data-year="2025" data-day="140" data-meeting="oct 17 · pricing experiment · with k. liu" cx="770" cy="525" r="3.5" fill="currentColor" opacity="0.75"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="174" data-meeting="nov 20 · territory plan · with k. liu" cx="795" cy="555" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="200" data-meeting="dec 16 · year-end push · with k. liu" cx="770" cy="590" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="234" data-meeting="jan 19 · q1 quota set · with k. liu" cx="710" cy="590" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="263" data-meeting="feb 17 · enterprise motion · with k. liu" cx="665" cy="560" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="293" data-meeting="mar 18 · channel partner sync · with k. liu" cx="650" cy="595" r="3" fill="currentColor" opacity="0.45"/>
+            </g>
+
+            <!-- Design cluster (warm orange) -->
+            <g style="color: #C99363" id="g-design">
+              <circle class="note" data-month="oct" data-year="2025" data-day="142" data-meeting="oct 19 · design crit · with r. shah" cx="925" cy="595" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="167" data-meeting="nov 13 · brand refresh · with r. shah, s. okafor" cx="950" cy="580" r="3" fill="currentColor" opacity="0.5"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="197" data-meeting="dec 13 · system review · with r. shah" cx="965" cy="585" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="322" data-meeting="apr 22 · galaxy concept review · with r. shah" cx="975" cy="615" r="4" fill="currentColor" opacity="0.9"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="254" data-meeting="feb 8 · component audit · with r. shah" cx="1005" cy="600" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="289" data-meeting="mar 14 · token system · with r. shah" cx="975" cy="645" r="3.5" fill="currentColor" opacity="0.7"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="230" data-meeting="jan 15 · v4 explorations · with r. shah" cx="935" cy="635" r="3" fill="currentColor" opacity="0.55"/>
+            </g>
+
+            <!-- v3 launch cluster (sage) -->
+            <g style="color: #7A9479" id="g-v3">
+              <circle class="note" data-month="mar" data-year="2026" data-day="296" data-meeting="mar 21 · v3 dry-run · with d. park" cx="455" cy="160" r="3" fill="currentColor" opacity="0.6"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="302" data-meeting="mar 27 · v3 GA call · with eng team" cx="495" cy="150" r="3.5" fill="currentColor" opacity="0.8"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="310" data-meeting="apr 5 · v3 launch retro · with eng team, s. okafor" cx="515" cy="180" r="4" fill="currentColor" opacity="0.95"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="314" data-meeting="apr 9 · v3 hot-fix triage · with j. ortiz" cx="535" cy="165" r="3" fill="currentColor" opacity="0.65"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="319" data-meeting="apr 14 · v3 metrics review · with d. park" cx="545" cy="195" r="3" fill="currentColor" opacity="0.55"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="326" data-meeting="apr 26 · v3 customer letter · with s. okafor, k. liu" cx="470" cy="195" r="3" fill="currentColor" opacity="0.6"/>
+              <circle cx="515" cy="180" r="8" class="note-mark" fill="none" stroke="#F0E9D8" stroke-width="1.4" opacity="0.9"/>
+            </g>
+
+            <!-- Stray notes (the long tail) -->
+            <g style="color: var(--ink-faint)" id="g-stray">
+              <circle class="note" data-month="oct" data-year="2025" data-day="128" data-meeting="oct 5 · all-hands" cx="490" cy="380" r="2.5" fill="currentColor" opacity="0.35"/>
+              <circle class="note" data-month="nov" data-year="2025" data-day="158" data-meeting="nov 4 · all-hands" cx="555" cy="410" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="188" data-meeting="dec 4 · all-hands" cx="595" cy="400" r="2.5" fill="currentColor" opacity="0.32"/>
+              <circle class="note" data-month="jan" data-year="2026" data-day="216" data-meeting="jan 1 · new-year planning" cx="780" cy="430" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="aug" data-year="2025" data-day="64" data-meeting="aug 2 · summer offsite" cx="240" cy="430" r="2.5" fill="currentColor" opacity="0.32"/>
+              <circle class="note" data-month="sep" data-year="2025" data-day="96" data-meeting="sep 3 · board update" cx="285" cy="475" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="feb" data-year="2026" data-day="246" data-meeting="feb 1 · all-hands" cx="845" cy="465" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="jul" data-year="2025" data-day="36" data-meeting="jul 5 · summer planning" cx="380" cy="380" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="mar" data-year="2026" data-day="280" data-meeting="mar 5 · all-hands" cx="615" cy="360" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="apr" data-year="2026" data-day="308" data-meeting="apr 3 · all-hands" cx="370" cy="430" r="2.5" fill="currentColor" opacity="0.28"/>
+              <circle class="note" data-month="jun" data-year="2025" data-day="2" data-meeting="jun 2 · fiscal kickoff" cx="190" cy="400" r="2.5" fill="currentColor" opacity="0.3"/>
+              <circle class="note" data-month="dec" data-year="2025" data-day="206" data-meeting="dec 22 · year-end social" cx="690" cy="440" r="2.5" fill="currentColor" opacity="0.32"/>
+            </g>
+
+            <!-- ============ CLUSTER LABELS ============ -->
+            <text class="cluster-label" x="220" y="180" text-anchor="start">engineering</text>
+            <text class="cluster-label" x="585" y="155" text-anchor="start">acme deal</text>
+            <text class="cluster-label" x="820" y="225" text-anchor="start">research</text>
+            <text class="cluster-label" x="78"  y="495" text-anchor="start">marketing</text>
+            <text class="cluster-label" x="345" y="455" text-anchor="start">1:1s</text>
+            <text class="cluster-label" x="660" y="475" text-anchor="start">sales</text>
+            <text class="cluster-label dim" x="900" y="555" text-anchor="start">design</text>
+            <text class="cluster-label" x="450" y="115" text-anchor="start">v3 launch</text>
+
+          </svg>
+
+          <!-- Floating ask bar — absolute, centered over the galaxy -->
+          <div class="askbar" role="search">
+            <div class="askbar__left">
+              <span class="askbar__geomi" aria-hidden="true"></span>
+              <span class="label">ask the brain</span>
+            </div>
+            <div class="askbar__center">
+              <input class="askbar__input"
+                     placeholder="who, when, what do you want to remember?" />
+              <span class="askbar__caret" aria-hidden="true"></span>
+            </div>
+            <button class="askbar__send" aria-label="send">↑</button>
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- Right column: vertical time selector -->
+      <aside class="timecol" aria-label="time selector">
+
+        <div class="timecol__group">
+          <div class="timecol__head">recent</div>
+          <button class="trow" data-scope="recent" data-key="this-week"><span class="trow__label">this week</span><span class="trow__spark" data-spark="this-week"></span></button>
+          <button class="trow" data-scope="recent" data-key="last-week"><span class="trow__label">last week</span><span class="trow__spark" data-spark="last-week"></span></button>
+          <button class="trow" data-scope="recent" data-key="this-month"><span class="trow__label">this month</span><span class="trow__spark" data-spark="this-month"></span></button>
+          <button class="trow" data-scope="recent" data-key="last-month"><span class="trow__label">last month</span><span class="trow__spark" data-spark="last-month"></span></button>
+        </div>
+
+        <div class="timecol__group">
+          <div class="timecol__head">months · 2026</div>
+          <div class="timecol__months">
+            <button class="mrow" data-scope="month" data-month="jan" data-year="2026">jan</button>
+            <button class="mrow" data-scope="month" data-month="feb" data-year="2026">feb</button>
+            <button class="mrow" data-scope="month" data-month="mar" data-year="2026">mar</button>
+            <button class="mrow" data-scope="month" data-month="apr" data-year="2026">apr</button>
+            <button class="mrow" data-scope="month" data-month="may" data-year="2026">may</button>
+            <button class="mrow future" data-scope="month" data-month="jun" data-year="2026" disabled>jun</button>
+            <button class="mrow future" data-scope="month" data-month="jul" data-year="2026" disabled>jul</button>
+            <button class="mrow future" data-scope="month" data-month="aug" data-year="2026" disabled>aug</button>
+            <button class="mrow future" data-scope="month" data-month="sep" data-year="2026" disabled>sep</button>
+            <button class="mrow future" data-scope="month" data-month="oct" data-year="2026" disabled>oct</button>
+            <button class="mrow future" data-scope="month" data-month="nov" data-year="2026" disabled>nov</button>
+            <button class="mrow future" data-scope="month" data-month="dec" data-year="2026" disabled>dec</button>
+          </div>
+        </div>
+
+        <div class="timecol__group">
+          <div class="timecol__head">quarters</div>
+          <div class="timecol__quarters">
+            <button class="qrow" data-scope="quarter" data-quarter="q1" data-year="2026">q1</button>
+            <button class="qrow" data-scope="quarter" data-quarter="q2" data-year="2026">q2</button>
+            <button class="qrow future" data-scope="quarter" data-quarter="q3" data-year="2026" disabled>q3</button>
+            <button class="qrow future" data-scope="quarter" data-quarter="q4" data-year="2026" disabled>q4</button>
+          </div>
+        </div>
+
+        <div class="timecol__group">
+          <div class="timecol__head">years</div>
+          <button class="trow" data-scope="year" data-year="2026"><span class="trow__label">2026</span><span class="trow__spark" data-spark="year-2026"></span></button>
+          <button class="trow" data-scope="year" data-year="2025"><span class="trow__label">2025</span><span class="trow__spark" data-spark="year-2025"></span></button>
+        </div>
+
+        <div class="timecol__divider"></div>
+
+        <button class="alltime" data-scope="all">all time</button>
+
+      </aside>
+
+    </div>
+
+  </div>
+
+  <!-- Designer commentary, outside the frame -->
+  <aside class="commentary">
+    <h2>notes from the designer · v4.3</h2>
+    <p>
+      Two cuts. <em>The companion meeting strip is gone.</em> A list of
+      titles below a constellation that already shows those same notes,
+      lit, was redundant chrome — the eye reads the strip, the galaxy
+      becomes wallpaper. With the strip removed, the galaxy <em>is</em>
+      the answer: spotlit dots, dimmed neighbours, the breadcrumb naming
+      the scope. The user looks at the sky, not at a list.
+    </p>
+    <p>
+      The ask bar now <em>floats</em> over the galaxy in the Notes-view
+      pill — translucent panel, soft drop-shadow, blur backdrop, breathing
+      Geomi on the left, italic-serif placeholder, blinking caret. No more
+      dedicated tray with a rule above it. Memory and Notes share one
+      gesture surface: a centered pill that hovers low over the canvas.
+      Calmer; less furniture.
+    </p>
+    <p>
+      What's next is the <em>people lens</em> for v5. The right column
+      gets a twin underneath: <em>people</em> — k. liu, d. park, mrs.
+      chen — same affordance, same spotlight, but lit by who-you-met-with
+      rather than when. Time and people are two readings of the same
+      galaxy.
+    </p>
+    <p class="sig">— Rachel · 4 May 2026 · click any row · <kbd>esc</kbd> to release</p>
+  </aside>
+
+</div>
+
+<script>
+  /* ─────────────────────────────────────────────────────────────
+     v4.2 vertical time column wiring.
+     One gesture: click a row → spotlight; click again / ESC / × → release.
+     ───────────────────────────────────────────────────────────── */
+  (function () {
+    const svg          = document.querySelector('.galaxy-svg');
+    const allNotes     = Array.from(svg.querySelectorAll('.note'));
+    const breadcrumb   = document.getElementById('breadcrumb');
+    const bcName       = document.getElementById('bc-name');
+    const bcCount      = document.getElementById('bc-count');
+    const bcClose      = document.getElementById('bc-close');
+    const galaxyPane   = document.querySelector('.galaxy-pane');
+
+    /* Today: 2026-05-04. Dataset spans jun 2025..apr 2026, plus a future-quiet may.
+       For "this week" / "last week" we'll pretend today's week starts 2026-05-04
+       and last week is 2026-04-27..05-03 — which maps onto the late-april meetings
+       in the dataset (a graceful synthetic lookup). */
+
+    const MONTH_FULL = {
+      jan:'january', feb:'february', mar:'march', apr:'april',
+      may:'may', jun:'june', jul:'july', aug:'august',
+      sep:'september', oct:'october', nov:'november', dec:'december'
+    };
+
+    /* Each scope returns a predicate over a note element. */
+    function notesMatching(predicate) {
+      return allNotes.filter(predicate);
+    }
+
+    /* recent buckets — synthetic but sensible against the dataset. */
+    function predicateFor(scope, params) {
+      switch (scope) {
+        case 'recent': {
+          // recent is computed off data-day; the dataset's apr 2026 spans 306..334.
+          // today is 2026-05-04 → roughly day 365 in this fiscal sequence.
+          // this-week  : last 7 fiscal days (358..365) — there's nothing this week,
+          //              so we soften and grab the very latest two notes.
+          // last-week  : 351..357 — also empty in dataset; fall back to apr 26-28
+          //              "career conversation" / "v3 customer letter" / "acme pricing"
+          //              (days 324, 326, 328)
+          // this-month : may 2026 — none in dataset, fall back to last 30 days (305..)
+          // last-month : april 2026 (306..334)
+          if (params.key === 'this-week') {
+            // softly: the two latest notes
+            return n => {
+              const d = +n.dataset.day;
+              return d >= 326;
+            };
+          }
+          if (params.key === 'last-week') {
+            return n => {
+              const d = +n.dataset.day;
+              return d >= 320 && d < 326;
+            };
+          }
+          if (params.key === 'this-month') {
+            // may has no data, so light up the last partial week of apr
+            return n => {
+              const d = +n.dataset.day;
+              return d >= 320;
+            };
+          }
+          if (params.key === 'last-month') {
+            return n => n.dataset.month === 'apr' && n.dataset.year === '2026';
+          }
+          return () => false;
+        }
+        case 'month':
+          return n => n.dataset.month === params.month && n.dataset.year === params.year;
+        case 'quarter': {
+          const qmap = { q1:['jan','feb','mar'], q2:['apr','may','jun'],
+                         q3:['jul','aug','sep'], q4:['oct','nov','dec'] };
+          const months = qmap[params.quarter] || [];
+          return n => n.dataset.year === params.year && months.indexOf(n.dataset.month) !== -1;
+        }
+        case 'year':
+          return n => n.dataset.year === params.year;
+        case 'all':
+          return () => true;
+      }
+      return () => false;
+    }
+
+    function scopeName(scope, params) {
+      switch (scope) {
+        case 'recent': return params.key.replace('-', ' ');
+        case 'month':  return MONTH_FULL[params.month] + (params.year !== '2026' ? ' ' + params.year : '');
+        case 'quarter':return params.quarter.toUpperCase() + ' ' + params.year;
+        case 'year':   return params.year;
+        case 'all':    return 'all time';
+      }
+      return '';
+    }
+
+    /* ── State ───────────────────────────────────────────────── */
+    let activeBtn   = null;
+    let activeScope = null;
+
+    /* ── Apply / clear spotlight ─────────────────────────────── */
+    function applyScope(btn, scope, params) {
+      // clicking the same row releases
+      if (activeBtn === btn) {
+        clearScope();
+        return;
+      }
+      activeBtn = btn;
+      activeScope = { scope, params };
+
+      // visual selection
+      document.querySelectorAll('.timecol .active').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+
+      const pred = predicateFor(scope, params);
+
+      // "all" releases everything (no spotlight, just visual)
+      if (scope === 'all') {
+        svg.classList.remove('spotlight');
+        allNotes.forEach(n => n.classList.remove('in-scope'));
+        breadcrumb.classList.remove('show');
+        return;
+      }
+
+      svg.classList.add('spotlight');
+      const matches = [];
+      allNotes.forEach(n => {
+        const hit = pred(n);
+        n.classList.toggle('in-scope', hit);
+        if (hit) matches.push(n);
+      });
+
+      // breadcrumb — the entire scope feedback. The galaxy carries the rest.
+      const name = scopeName(scope, params);
+      bcName.textContent = name;
+      bcCount.textContent = matches.length === 1 ? '1 note' : matches.length + ' notes';
+      breadcrumb.classList.add('show');
+    }
+
+    function clearScope() {
+      activeBtn = null;
+      activeScope = null;
+      document.querySelectorAll('.timecol .active').forEach(el => el.classList.remove('active'));
+      svg.classList.remove('spotlight');
+      allNotes.forEach(n => n.classList.remove('in-scope', 'lifted'));
+      breadcrumb.classList.remove('show');
+    }
+
+    /* ── Wire all rows ─────────────────────────────────────── */
+    document.querySelectorAll('.timecol [data-scope]').forEach(btn => {
+      if (btn.classList.contains('future') || btn.disabled) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const scope = btn.dataset.scope;
+        const params = {
+          key:     btn.dataset.key,
+          month:   btn.dataset.month,
+          year:    btn.dataset.year,
+          quarter: btn.dataset.quarter
+        };
+        applyScope(btn, scope, params);
+      });
+    });
+
+    /* ── Breadcrumb close ─────────────────────────────────── */
+    bcClose.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearScope();
+    });
+
+    /* ── Click empty galaxy to release ────────────────────── */
+    galaxyPane.addEventListener('click', (e) => {
+      if (e.target.closest('.note')) return;
+      if (e.target.closest('.askbar')) return;
+      if (e.target.closest('.breadcrumb')) return;
+      if (activeScope) clearScope();
+    });
+
+    /* ── ESC to release ──────────────────────────────────── */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeScope) clearScope();
+    });
+
+    /* ── Sparklines ─────────────────────────────────────────
+       Tiny 4-bar density visualisation per row. Computed off the
+       dataset; only renders for .trow rows that requested one. */
+    function buildSpark(host, predicate, buckets) {
+      const counts = new Array(buckets).fill(0);
+      const matched = allNotes.filter(predicate);
+      if (matched.length === 0) return;
+      const days = matched.map(n => +n.dataset.day);
+      const lo = Math.min.apply(null, days);
+      const hi = Math.max.apply(null, days);
+      const span = Math.max(1, hi - lo);
+      matched.forEach(n => {
+        const d = +n.dataset.day;
+        const idx = Math.min(buckets - 1, Math.floor(((d - lo) / span) * buckets));
+        counts[idx] += 1;
+      });
+      const max = Math.max.apply(null, counts) || 1;
+      counts.forEach(c => {
+        const span = document.createElement('span');
+        span.style.height = (1 + (c / max) * 5) + 'px';
+        host.appendChild(span);
+      });
+    }
+    document.querySelectorAll('[data-spark]').forEach(host => {
+      const which = host.dataset.spark;
+      let pred = () => false;
+      if (which === 'this-week')   pred = n => +n.dataset.day >= 326;
+      else if (which === 'last-week')   pred = n => +n.dataset.day >= 320 && +n.dataset.day < 326;
+      else if (which === 'this-month')  pred = n => +n.dataset.day >= 320;
+      else if (which === 'last-month')  pred = n => n.dataset.month === 'apr' && n.dataset.year === '2026';
+      else if (which === 'year-2026')   pred = n => n.dataset.year === '2026';
+      else if (which === 'year-2025')   pred = n => n.dataset.year === '2025';
+      buildSpark(host, pred, 6);
+    });
+
+  })();
+</script>
+
+</body>
+</html>

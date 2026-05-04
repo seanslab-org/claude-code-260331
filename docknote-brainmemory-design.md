@@ -41,7 +41,11 @@
 - Per-meeting incremental consolidation + nightly 03:00 cross-engram consolidation
 - **Citations to source meeting + timestamp span** on every engram claim and synthesis output
 - **Per-field provenance + git-backed audit trail** with one-click revert
-- **Brain Inbox** UI for reviewing auto-extracted changes
+- **Memory landing surface — galaxy view of all meeting notes**, clusters held together by edge weight (project / series / attendee / sameday), recency encoded as opacity, with a **floating Geomi ask pill** at the bottom (matches Notes-view pattern). The user-facing unit is **note** (every Docknote-generated note from a meeting); architecture/code calls it engram. See §9.1.
+- **Vertical time column (right side)** — always-visible grouped scope selector (recent · months · quarters · years · all time). Click a scope → galaxy spotlights notes in that scope, others fade; cluster geometry never reorganizes. No companion list, no horizontal ribbon, no drag-pin rewind on the landing (rewind moves to per-engram §9.5). See §9.1.
+- **People as a first-class lens** on the Memory surface. A person view answers four queries directly, as Geomi-written prose with marginalia awaiting initials: *who said what · whose progress · who needs care · who committed to what*. People are a sibling lens to galaxy, not a tab inside it. See §9.1 and decision log #15.
+- **The killer-move combination** — `time-scope × person-pin` collapses cross-meeting attribution to a single click: "show me everything Alex said in February (or Q3, or last week)" lands as the natural gesture for the doctor / lawyer / salesperson user. See §9.1.
+- **Brain Inbox** UI for reviewing auto-extracted changes (the morning re-read state of the Memory surface when marginalia is pending)
 - Geomi proactive triggers (pre-meeting brief, mid-meeting bubble suggestions, end-of-day nudge)
 - Acceptance against the 24-persona corpus at ≥ 80%
 
@@ -622,15 +626,58 @@ This is the v8-differentiating step; none of the prior art does it well. Quality
 
 ---
 
-## 9. Edit UX
+## 9. Memory UX
 
-### 9.1 Click-to-edit per field
+The Memory surface in Docknote has two layers: the **landing** (how the user sees and navigates the corpus of meeting notes) and the **edit path** (how a single engram is read, edited, and audited). The landing is the v8 face most users touch every day; the edit path is the precision instrument behind it.
+
+### 9.1 Memory landing — surface and lenses
+
+When the user clicks **Memory** in Docknote's left sidebar, the main pane is a **galaxy view** of every meeting note in the corpus. The user-facing unit is `note` (architecture/code retains `engram`). A reference visual exists at `~/seanslab/HiDockSkill/src/galaxyHtml.ts` (D3 force layout, cosmic palette); Docknote uses the same shape in its own warm-paper palette (no purple). **Locked landing mockup:** `~/seanslab/Research/cc-learn/rachel-redesign/v4.3-memory-galaxy-floating-ask.html`. Earlier iterations (v4 galaxy, v4.1 horizontal year ribbon, v4.2 dedicated ask tray) are kept for design lineage but superseded.
+
+The pane has three regions: **galaxy** (center, fills), **time column** (right, ~170px, always visible), and the **floating ask** (pill, centered, absolute-positioned over the galaxy). No bottom ribbon. No companion strip. No dedicated ask tray.
+
+**The galaxy.** Each note is a dot. Notes that share a cluster (by series / project / attendee / sameday) are positioned close to each other; cluster names appear as small-caps italic-serif labels at constellation edges, with a faint cluster-color halo behind each group. **Opacity encodes recency** (older notes dim, recent notes bright); a faint vellum ring around a dot signals unconfirmed marginalia (Geomi waiting for the user to confirm a proposed update). Hover a dot → small note card (date, meeting title, two-line summary, attendees). **No file paths, no field labels, no cosine numbers, no model names** anywhere on the surface (principle 1).
+
+**The time column (right side).** Always visible, no flyout, no dropdown. A grouped list of time scopes the user can think in directly:
+
+- **recent** — *this week · last week · this month · last month*
+- **months · {current year}** — a 4-column grid of month abbreviations (jan ... dec); months past "today" render at lower opacity since they haven't happened.
+- **quarters** — Q1 · Q2 · Q3 · Q4
+- **years** — descending, 3–5 visible (only years with notes)
+- **all time** — bottom row, the release affordance
+
+Each row is small italic-serif. Active row gets a brand-teal pill (`--brand-soft` fill, `--brand-strong` text); others stay quiet (`--ink-soft`). Tiny sparklines (1px-tall density bars) appear beside *recent* and *years* rows showing meeting density for that period; the months grid and quarters omit sparklines (too compact to render without becoming chrome). The column replaces the v4.1 horizontal year ribbon entirely; the column scales to deep history (years, quarters) without nesting and uses natural human time vocabulary throughout.
+
+**Spotlight — the only landing gesture on time.** Click any time-column row → that scope becomes active. The galaxy spotlights notes in that scope (full opacity); other notes fade to ~0.15. **Cluster halos and labels stay put — the galaxy does not reorganize.** A breadcrumb appears at the top of the galaxy column: "*spotlight · february · 23 meetings*" with a small × close pill. **No companion meeting strip.** The galaxy is the answer; a list under it would be redundant chrome (principle 1). Click the same row again, click *all time*, click the breadcrumb's ×, or press ESC → release. Active scope is mutually exclusive (clicking Q3 deactivates whatever else was active).
+
+**Drag-pin rewind is dropped from the landing.** Time-travel ("show me what I knew before the leadership offsite") moves to per-engram view as a reading-only history slider — see §9.5. The Memory landing carries one temporal gesture, not two. This simplifies the surface and matches the v8 user's actual landing-time intent (recall *what I have*, not *what I had*).
+
+**The floating ask.** A pill-shaped bar (`border-radius: 999px`, blur backdrop, soft shadow) floats over the galaxy at the bottom — `position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);` — centered within the galaxy column (does not extend under the time column). Pattern verbatim from `~/seanslab/Docknote/ux-mockups/bottom-bar.html` so Memory feels of-a-piece with Notes. Translucent panel (`rgba(255,255,255,0.88)` light / `rgba(35,37,36,0.78)` dark) lets the warm-paper backdrop and active spotlights glow through. The bar carries: a small breathing Geomi dot, an italic-serif placeholder ("*who, when, what do you want to remember?*"), a blinking caret, and a small send affordance. **This is the only ask field on the surface** — there is no second ask field elsewhere.
+
+**The people lens — first-class to Phase 3.** People are a sibling lens to the galaxy, not a tab nested inside it. The user opens a person by name (via the floating ask, or via a `people` rail/toggle — composition TBD by Rachel in v5). A person view answers **four queries directly, as Geomi-written prose with marginalia awaiting initials**:
+
+- **Who said what** — quoted lines attributed to this person across meetings, with citations to source meeting + timestamp span.
+- **Whose progress** — trajectory: how this person's situation, role, project status, or condition has moved over time.
+- **Who needs care** — outstanding follow-ups, pending commitments, things this person flagged that haven't been resolved. The doctor's recall list; the salesperson's chase list.
+- **Who committed to what** — action items and decisions where this person is the owner / authority, with the originating meeting and quote.
+
+These are **not** a profile with tabs. They are four short prose sections on one page, generated from the engram store via the existing recall pipeline (§8 Stage 0–4). Marginalia (Geomi-proposed updates not yet confirmed) appear inline with a *Yes, remember that* / *Not yet* affordance — the same vocabulary as the Brain Inbox (§9.4), but contextualized to the person.
+
+**The killer-move combination — `time-scope × person-pin`.** With a person pinned (active in the lens), clicking any scope row in the time column collapses to a single-click attribution query: *"show me everything Alex said in February"* (click `feb`), *"...in Q3"* (click `Q3`), *"...this week"* (click *this week*). The galaxy spotlights only this person's notes within that scope; the four-query view filters to that scope's slice. This is the load-bearing gesture for the v8 user — the doctor recalling Mrs. Chen's March visits, the salesperson recalling Alex Chen's Q3 commitments, the lawyer recalling opposing counsel's December positions. **Single click resolves a query that prior tools force into multi-step search.** Decision log #15.
+
+**The morning re-read sub-state.** When `proposed_updates` are pending (typically right after the nightly consolidation pass at 03:00), a quiet one-line banner above the galaxy reads "*N marginalia awaiting your initials → review now.*" Clicking it routes into the Brain Inbox (§9.4). The banner is the only chrome the morning ritual gets on the landing; the galaxy itself stays untouched.
+
+**Light + dark.** The surface honors Docknote's existing `--bg / --panel / --rule / --brand` token set with a dark-mode toggle. Cluster colors are color-blind-safe (not yet verified for tritanopia — open question for Rachel v5).
+
+**Open ergonomic question (Rachel v4.3).** When a spotlit cluster lights up dots directly under the floating ask, the pill can occlude what the user just summoned. Two options on the table: (a) bump pill opacity another notch when a scope is active, (b) drift the pill upward 30–40px on spotlight. Currently static at 18px; resolve in v5 or earlier user testing.
+
+### 9.2 Click-to-edit per field
 
 - Engram UI (the Hearth file view) shows each field as click-to-edit text. Frontmatter `value:` is the edited content.
 - Save → `user_edit` API call → immediate git commit + frontmatter `human_locked: true`, `authored_by: user`.
 - No "open in markdown editor" required; users who want it can still `cd ~/Docknote/brain && vim person/alex.md`.
 
-### 9.2 Provenance badges
+### 9.3 Provenance badges
 
 Every field shows a small badge:
 - `auto-extracted · 2 days ago · qwen-3-32b` (with hover → source meeting + span)
@@ -638,7 +685,7 @@ Every field shows a small badge:
 
 Click badge → side drawer with full revision history (5-deep visible, expand for full git log).
 
-### 9.3 Brain Inbox
+### 9.4 Brain Inbox
 
 A dedicated UI surface listing all `proposed_updates` since the last review.
 
@@ -658,7 +705,7 @@ Brain Inbox · 7 proposed updates from last night
 
 Per-field accept/reject. Accept → applies the update + unlocks the field. Reject → drops the proposed_update; no commit.
 
-### 9.4 Diff & history
+### 9.5 Diff & history
 
 - Per-field history rendered as side-by-side or sentence-level highlight (strikethrough removed, underline added).
 - "Time travel": each engram has a date slider; drag back to see the engram's frontmatter at that moment (`read_engram_at`).
@@ -803,6 +850,7 @@ The dominant variable is **Qwen-3-32B's synthesis quality** vs the GPT-4o baseli
 | 12 | **No `facts` table; reverse the Graphiti bi-temporal borrow** | The brain isn't tabular; structured-claims rows accumulate over years and create fake-precision contradictions where the actual structure is associative and reconstructive. Atomic claims live in their birth meeting frontmatter (`decisions[]`, `action_items[]`, `claims[]`). Cross-meeting truth is reconstructed at recall time by the LLM over retrieved chunks, not pre-computed in a SQL store. The galaxy (sentence-vector space) is primary; RAPTOR is its hierarchy; SQLite holds *indexes only*, never parallel structured truth. This reverses decision #3's "steal Graphiti's *schema*" — we keep `valid_at` discipline only inside meeting frontmatter where it's local and natural. **Independently arrived at the same conclusion as Karpathy's [LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) (April 2026)**: markdown SOT, indexes are derived, structured DBs add fake precision. Sibling projects: Memio (`~/seanslab/Memio/`) chose graph memory for its 10-year horizon — defensible at that scale; v8 chose reconstructive recall at single-Mac scale. Both are right at their respective shapes. | Yes (re-add a derived `facts_index` materialized view if specific queries justify it) |
 | 13 | **Karpathy three-layer model adopted** (`raw/` + `cortex/` + `cortex/SCHEMA.md`) | `raw/` is the immutable substrate (transcripts, future Slack/email/voice-memo go here). `cortex/` is the LLM-maintained wiki layer (engrams). `cortex/SCHEMA.md` is the user-editable schema contract the LLM reads before every encoding pass. `cortex/index.md` (auto-generated catalog) and `cortex/log.md` (chronological event log) are added as Karpathy's recommended navigation files. v8 had effectively converged on this architecture; we adopt his vocabulary for clarity and cite the gist | Yes (collapse into single namespace if `raw/` proves overkill — but it future-proofs for non-meeting capture) |
 | 14 | **Geomi as confirmation mediator** (the v8-Karpathy reconciliation) | Karpathy's gist says "the LLM owns the wiki entirely; you rarely write it yourself." For doctor/lawyer/salesperson users, wiki authority must live with the human — but typing into engram fields is the wrong UX for a meeting-recall tool. Geomi mediates: LLM proposes (consolidation pass writes `proposed_updates`), Geomi formats one as a conversational prompt ("After today's meeting with Alex, I'd update his role line — confirm?"), user gives a verdict (Confirm/Reject/Modify/Defer), commit lands with the user as authority. **Confirmed memories outrank unconfirmed ones in recall ranking.** Direct file editing remains as a power-user escape hatch but is not the primary workflow. | Yes (fall back to direct-edit-only if Geomi confirmation flow proves too noisy in user testing) |
+| 15 | **People as a first-class lens on the Memory surface; `time-scope × person-pin` is the load-bearing recall gesture** | The v8 user — doctor, lawyer, salesperson — does not browse memory; they *recall a person*. Person-shaped engrams already exist in the cortex (§4); what was missing was a UI lens that makes them the dominant pivot. The people lens answers four queries directly as Geomi-written prose: *who said what · whose progress · who needs care · who committed to what.* Combined with the time column's spotlight gesture (§9.1), pinning a person and clicking any scope (a month, a quarter, "this week", "last year") resolves cross-meeting attribution to a single click — *"show me everything Alex said in February / in Q3 / this week"* — the gesture prior tools force into multi-step search. This locks people as a sibling lens to galaxy, not a tab nested in it; locks spotlight as the only temporal gesture on the landing (drag-pin rewind moves to per-engram view, §9.5); and drops the companion meeting strip (the galaxy is the answer). Locked landing mockup: `rachel-redesign/v4.3-memory-galaxy-floating-ask.html`. Earlier iterations (`v4`, `v4.1`, `v4.2`) preserved for design lineage. Person-lens mockup is the next deliverable (Rachel v5). | Yes (people-lens composition can iterate; the scope×person combination is the design intent and survives composition changes) |
 
 ---
 

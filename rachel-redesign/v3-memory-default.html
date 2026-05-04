@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Docknote Memory — landing (v3, default)</title>
+<style>
+  /* ─── Tokens (verbatim, sdd-ui-tokens.md §12) ─────────────── */
+  :root {
+    --bg:           #F7F5EF;
+    --panel:        #FFFFFF;
+    --panel-soft:   #FBFAF6;
+    --ink:          #1F1F1E;
+    --ink-soft:     #5A5854;
+    --ink-faint:    #94918B;
+    --rule:         #E5E1D6;
+
+    --brand:        #1bbfcb;
+    --brand-strong: #0097a7;
+    --brand-soft:   #E0F2F4;
+
+    --vellum:       #F0E9D8;
+
+    --space-1:  4px;
+    --space-2:  8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 40px;
+
+    --radius-sm:    6px;
+    --radius-md:    8px;
+    --radius-lg:   12px;
+    --radius-xl:   14px;
+    --radius-pill: 999px;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.18);
+
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --ease-out:    cubic-bezier(0.2, 0.7, 0.4, 1);
+
+    --serif: "Iowan Old Style", "Charter", "Georgia", serif;
+  }
+  body.dark {
+    --bg:           #1A1B1A;
+    --panel:        #232524;
+    --panel-soft:   #2A2C2B;
+    --ink:          #F2EFE7;
+    --ink-soft:     #BCB9B0;
+    --ink-faint:    #757269;
+    --rule:         #353634;
+
+    --brand:        #24dceb;
+    --brand-strong: #1bbfcb;
+    --brand-soft:   #1A353A;
+
+    --vellum:       #2D2A22;
+
+    --shadow-modal: 0 24px 60px -32px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 36px 32px 64px; }
+  .theme-toggle {
+    position: fixed; top: 20px; right: 20px;
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: var(--radius-pill); padding: 6px 12px;
+    font-size: 11px; color: var(--ink-soft);
+    cursor: pointer; font-family: inherit; z-index: 100;
+  }
+
+  /* ─── App frame ───────────────────────────────────────────── */
+  .app {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-modal);
+    height: 760px;
+    display: flex; flex-direction: column;
+  }
+  .titlebar {
+    height: 36px;
+    background: var(--panel-soft);
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center;
+    padding: 0 14px;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .titlebar .dot { width: 11px; height: 11px; border-radius: var(--radius-pill); background: var(--rule); }
+  .titlebar .wordmark {
+    margin-left: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .titlebar .wordmark .mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--brand); color: white;
+    font-weight: 700; font-size: 11px;
+  }
+  .workspace { flex: 1; display: flex; flex-direction: row; min-height: 0; }
+
+  /* ─── Sidebar (sidebar.css verbatim) ──────────────────────── */
+  .sidebar {
+    flex: 0 0 200px; width: 200px;
+    background: var(--panel-soft);
+    border-right: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .sidebar__inner {
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: var(--space-3) var(--space-2);
+    width: 200px;
+  }
+  .sidebar__group {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .sidebar__spacer { flex: 1 1 auto; }
+  .sidebar-row {
+    width: 100%;
+    height: 36px;
+    display: flex; align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sidebar-row[data-active='true'] {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+  .sidebar-row__icon {
+    width: 18px; height: 18px;
+    flex: 0 0 18px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sidebar-row__label { flex: 1 1 auto; }
+  .sidebar-row__hint {
+    font-size: 10px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .sidebar-row[data-placeholder='true'] { color: var(--ink-faint); }
+  .sidebar-plus {
+    width: 64px; height: 36px;
+    align-self: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--brand);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--brand-strong);
+    cursor: pointer;
+  }
+  .sidebar-plus__icon {
+    width: 14px; height: 14px;
+    fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ─── Memory pane ─────────────────────────────────────────── */
+  .memory {
+    flex: 1; min-width: 0;
+    background: var(--bg);
+    overflow-y: auto;
+    display: flex;
+  }
+  .memory__inner {
+    flex: 1;
+    padding: 40px 56px 36px;
+    display: flex; flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+  }
+
+  /* Masthead — quiet, lowercase serif. The book cover */
+  .masthead {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .masthead::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 1px; background: var(--vellum); opacity: 0.6;
+  }
+  .masthead__title {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    line-height: 1.1;
+    margin: 0;
+    font-style: italic;
+  }
+  .masthead__date {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  /* ─── Pending banner — the morning ritual, one line ──────── */
+  .pending {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel-soft);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--vellum);
+    border-radius: var(--radius-md);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+  .pending:hover { background: var(--panel); }
+  .pending__count {
+    color: var(--ink);
+    font-style: normal;
+    font-weight: 500;
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: 13px;
+  }
+  .pending__text { flex: 1; }
+  .pending__cta {
+    color: var(--brand-strong);
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .pending__arrow {
+    width: 14px; height: 14px;
+    fill: none; stroke: var(--brand-strong);
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ─── The lectern — open-a-page, the conversational way in ─ */
+  .lectern {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px -4px rgba(0,0,0,0.04);
+  }
+  .lectern__geomi {
+    width: 9px; height: 9px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    flex: 0 0 9px;
+    animation: breathe 4.2s var(--ease-out) infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50%      { opacity: 1.00; transform: scale(1.15); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lectern__geomi { animation: none; opacity: 0.85; }
+  }
+  .lectern__input {
+    flex: 1;
+    border: 0; outline: 0; background: transparent;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .lectern__input::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .lectern__hint {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  .lectern__kbd {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 20px;
+    padding: 0 6px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--panel-soft);
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  /* ─── Library — tabs over a list of pages ────────────────── */
+  .library {
+    display: flex; flex-direction: column;
+    gap: 0;
+  }
+  .library__tabs {
+    display: flex; align-items: flex-end; gap: 0;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .tab {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink-faint);
+    padding: 10px 16px 11px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+    font-style: italic;
+  }
+  .tab:hover { color: var(--ink-soft); }
+  .tab[data-active='true'] {
+    color: var(--ink);
+    border-bottom-color: var(--brand);
+    font-style: normal;
+  }
+  .tab__count {
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-left: 6px;
+    font-style: normal;
+  }
+
+  /* The shelves — grouped lists of pages */
+  .shelves { display: flex; flex-direction: column; gap: 22px; }
+  .shelf__head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 0 4px 6px;
+  }
+  .shelf__title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  .shelf__more {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .shelf__more:hover { color: var(--brand-strong); }
+
+  .pages {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column;
+  }
+  .page-row {
+    display: flex; align-items: baseline;
+    gap: 12px;
+    padding: 10px 8px 10px 4px;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+  .pages > :last-child { border-bottom: 0; }
+  .page-row:hover { background: var(--panel-soft); }
+
+  /* the small initial mark — "you wrote in this page" */
+  .page-row__mark {
+    flex: 0 0 18px;
+    width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--vellum);
+    line-height: 1;
+    padding-bottom: 1px;
+  }
+  .page-row__mark[data-empty='true'] {
+    color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  .page-row__title {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink);
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .page-row__phrase {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .page-row__when {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* Three-column grid for the People shelf — keeps a doctor's
+     patient roster scannable without making it a card-soup. */
+  .pages--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 28px;
+  }
+  .pages--grid .page-row {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* ─── designer commentary, outside the frame ──────────────── */
+  .commentary {
+    max-width: 720px;
+    margin: 32px auto 0;
+    padding: 0 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .commentary h2 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0 0 8px;
+  }
+  .commentary p { margin: 0 0 10px; }
+  .commentary .sig {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-faint);
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.body.classList.toggle('dark')">
+  toggle theme
+</button>
+
+<div class="page">
+
+  <div class="app">
+
+    <!-- Titlebar -->
+    <div class="titlebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="wordmark"><span class="mark">D</span> Docknote</span>
+    </div>
+
+    <div class="workspace">
+
+      <!-- Sidebar (Memory active) -->
+      <nav class="sidebar" aria-label="Primary">
+        <div class="sidebar__inner">
+          <ul class="sidebar__group">
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="6" y="3" width="13" height="16" rx="2"/><path d="M3 7v13a1 1 0 0 0 1 1h12"/><path d="M9 8h7M9 12h7M9 16h4"/></svg>
+              <span class="sidebar-row__label">Notes</span>
+            </a></li>
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+              <span class="sidebar-row__label">Whispers</span>
+            </a></li>
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1.5"/><path d="M5.5 7.5l1.5 1.5L9 7"/><path d="M13 6h8M13 12h8M13 18h8"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              <span class="sidebar-row__label">Todos</span>
+            </a></li>
+            <li><a class="sidebar-row" data-active="true">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H11v15H4.5A1.5 1.5 0 0 1 3 17.5z"/><path d="M21 5.5A1.5 1.5 0 0 0 19.5 4H13v15h6.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M11 4v15M13 4v15"/></svg>
+              <span class="sidebar-row__label">Memory</span>
+            </a></li>
+            <li><a class="sidebar-row" data-placeholder="true">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+              <span class="sidebar-row__label">HiDock</span>
+              <span class="sidebar-row__hint">no device</span>
+            </a></li>
+          </ul>
+          <div class="sidebar__spacer"></div>
+          <button class="sidebar-plus" aria-label="Import audio file">
+            <svg class="sidebar-plus__icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div class="sidebar__spacer"></div>
+          <ul class="sidebar__group">
+            <li><a class="sidebar-row">
+              <svg class="sidebar-row__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              <span class="sidebar-row__label">Settings</span>
+            </a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Memory landing — DEFAULT VIEW (mid-day, no gold star, just the book) -->
+      <main class="memory">
+        <div class="memory__inner">
+
+          <!-- Masthead -->
+          <header class="masthead">
+            <h1 class="masthead__title">your book, this afternoon</h1>
+            <span class="masthead__date">monday, 4 may</span>
+          </header>
+
+          <!-- One quiet pending line — the morning ritual, sub-mode -->
+          <button class="pending" aria-label="Review marginalia awaiting your initials">
+            <span class="pending__count">3</span>
+            <span class="pending__text">marginalia from yesterday are still waiting for your initials.</span>
+            <span class="pending__cta">read them</span>
+            <svg class="pending__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+
+          <!-- The lectern — ask, or open by name -->
+          <div class="lectern">
+            <span class="lectern__geomi" aria-hidden="true"></span>
+            <input class="lectern__input" type="text" placeholder="open a page, or ask &mdash; mrs. chen, q3 pricing, last tuesday&hellip;" />
+            <span class="lectern__hint">press <span class="lectern__kbd">/</span> from anywhere</span>
+          </div>
+
+          <!-- The library: tabs + shelves -->
+          <section class="library" aria-label="Pages in your book">
+
+            <div class="library__tabs" role="tablist">
+              <button class="tab" data-active="true" role="tab">recent <span class="tab__count">12</span></button>
+              <button class="tab" role="tab">people <span class="tab__count">47</span></button>
+              <button class="tab" role="tab">topics <span class="tab__count">9</span></button>
+              <button class="tab" role="tab">meetings <span class="tab__count">128</span></button>
+            </div>
+
+            <div class="shelves">
+
+              <!-- Earlier today -->
+              <div>
+                <div class="shelf__head">
+                  <h3 class="shelf__title">earlier today</h3>
+                </div>
+                <ul class="pages">
+                  <li class="page-row">
+                    <span class="page-row__mark" title="you co-authored this page">e</span>
+                    <span class="page-row__title">Mrs. Chen</span>
+                    <span class="page-row__phrase">— what we know, after sixteen visits</span>
+                    <span class="page-row__when">an hour ago</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" data-empty="true"></span>
+                    <span class="page-row__title">Hypertension follow-up protocol</span>
+                    <span class="page-row__phrase">— how you've been adjusting lisinopril this spring</span>
+                    <span class="page-row__when">2 hours ago</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" title="you co-authored this page">e</span>
+                    <span class="page-row__title">This morning's clinic</span>
+                    <span class="page-row__phrase">— Mrs. Chen, Mr. Okafor, Ms. Reyes, two new intakes</span>
+                    <span class="page-row__when">this morning</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Yesterday -->
+              <div>
+                <div class="shelf__head">
+                  <h3 class="shelf__title">yesterday</h3>
+                </div>
+                <ul class="pages">
+                  <li class="page-row">
+                    <span class="page-row__mark" title="you co-authored this page">e</span>
+                    <span class="page-row__title">Mr. Okafor</span>
+                    <span class="page-row__phrase">— a quiet patient who mentions things in passing</span>
+                    <span class="page-row__when">yesterday, 4:12 pm</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" data-empty="true"></span>
+                    <span class="page-row__title">Ms. Reyes</span>
+                    <span class="page-row__phrase">— hypertension, work in progress; labs pending tuesday</span>
+                    <span class="page-row__when">yesterday</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Earlier this week -->
+              <div>
+                <div class="shelf__head">
+                  <h3 class="shelf__title">earlier this week</h3>
+                  <span class="shelf__more">see all 12 &rsaquo;</span>
+                </div>
+                <ul class="pages">
+                  <li class="page-row">
+                    <span class="page-row__mark" data-empty="true"></span>
+                    <span class="page-row__title">Friday clinic, 1 May</span>
+                    <span class="page-row__phrase">— the afternoon, six visits, two referrals out</span>
+                    <span class="page-row__when">friday</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" title="you co-authored this page">e</span>
+                    <span class="page-row__title">Mrs. Hartwell</span>
+                    <span class="page-row__phrase">— the daughter is the one who calls, not the patient</span>
+                    <span class="page-row__when">thursday</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" data-empty="true"></span>
+                    <span class="page-row__title">Statin tolerance — what's been working</span>
+                    <span class="page-row__phrase">— a quiet pattern across four patients this spring</span>
+                    <span class="page-row__when">wednesday</span>
+                  </li>
+                  <li class="page-row">
+                    <span class="page-row__mark" title="you co-authored this page">e</span>
+                    <span class="page-row__title">Mr. Patel</span>
+                    <span class="page-row__phrase">— diabetes, recently retired, now walks every morning</span>
+                    <span class="page-row__when">tuesday</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- Designer commentary, outside the frame -->
+  <aside class="commentary">
+    <h2>notes from the designer</h2>
+    <p>
+      The default view is what a doctor sees when she clicks Memory between visits. She isn't here for a ritual; she's here to <em>look something up</em>. So the lead is the lectern — one italic line that takes a name (<em>Mrs. Chen</em>), a topic (<em>q3 pricing</em>), or a date (<em>last tuesday</em>). Geomi is the breathing dot inside it; the conversational way in is built into the input, not a chatbot panel.
+    </p>
+    <p>
+      Below the lectern is the library, tabbed by how a clinician actually thinks: <em>recent</em> first (because a real commonplace book falls open to the pages you just used), then <em>people</em>, <em>topics</em>, <em>meetings</em>. Each row is name in roman + a phrase of contents in italic + when. A small italic <em>e</em> beside a row means the user has co-authored that page through marginalia — principle 2 surfaced as a pen-mark, not a badge.
+    </p>
+    <p>
+      The morning ritual lives as one quiet line above the lectern. <em>3 marginalia from yesterday are still waiting for your initials.</em> Click and the morning view opens; ignore it and the book is still yours. The ritual is a sub-mode, never the homepage.
+    </p>
+    <p class="sig">— Rachel · 4 May 2026</p>
+  </aside>
+
+</div>
+
+</body>
+</html>
